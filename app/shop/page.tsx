@@ -18,7 +18,7 @@ export default function ShopPage() {
     id: "cr-01",
     name: "Capsaicin Relief Cream",
     price: 169.99,
-    image: "/placeholder.svg?height=600&width=600",
+    image: "/logo.jpg",
     description: "Fast-acting chilli seed extract cream for natural joint and muscle pain relief.",
     longDescription: `Capsaicin Relief is a premium, locally produced chilli seed extract cream designed to 
     provide fast-acting, natural heat therapy for sore muscles and joints. Formulated with 
@@ -55,7 +55,7 @@ export default function ShopPage() {
           <div className="space-y-4">
             <div className="aspect-square rounded-lg overflow-hidden bg-gray-100">
               <Image
-                src={product.image || "/placeholder.svg"}
+                src={product.image || "/logo.jpg"}
                 alt={product.name}
                 width={600}
                 height={600}
