@@ -27,7 +27,7 @@ export default function HomePage() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="border-white text-white hover:bg-white hover:text-red-600"
+                  className="border-white text-red-600 hover:bg-red-600 hover:text-white font-semibold"
                 >
                   <Link href="/how-it-works">How It Works</Link>
                 </Button>
@@ -35,11 +35,11 @@ export default function HomePage() {
             </div>
             <div className="relative">
               <Image
-                src="/placeholder.svg?height=500&width=400"
-                alt="Capsaicin Relief Cream"
-                width={400}
-                height={500}
-                className="mx-auto rounded-lg shadow-2xl"
+              src="/logo.jpg"
+              alt="Capsaicin Relief Cream"
+              width={400}
+              height={500}
+              className="mx-auto rounded-lg shadow-2xl"
               />
             </div>
           </div>

@@ -15,7 +15,7 @@ export default function HowItWorksPage() {
             Discover the science behind natural heat therapy and targeted pain relief
           </p>
           <Image
-            src="/placeholder.svg?height=300&width=600"
+            src="/how-it-works.jpg"
             alt="How Capsaicin Works"
             width={600}
             height={300}
