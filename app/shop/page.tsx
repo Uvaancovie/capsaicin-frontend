@@ -3,42 +3,83 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Star, Shield, Truck, Heart, Plus, Minus } from "lucide-react"
+import { Shield, Truck, Heart, Plus, Minus } from "lucide-react"
 import Image from "next/image"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useCart } from "@/components/cart-provider"
 import { useToast } from "@/hooks/use-toast"
+import { api } from "@/lib/api"
+
+interface Product {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  stock_quantity: number;
+  category: string;
+  image_url: string;
+  created_at: string;
+}
+
+// Helper function to safely format price
+const formatPrice = (price: any): string => {
+  const numPrice = Number(price) || 0;
+  return numPrice.toFixed(2);
+};
 
 export default function ShopPage() {
-  const [quantity, setQuantity] = useState(1)
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [quantities, setQuantities] = useState<{ [key: number]: number }>({});
   const { addItem } = useCart()
   const { toast } = useToast()
 
-  const product = {
-    id: "cr-01",
-    name: "Capsaicin Relief Cream",
-    price: 169.99,
-    image: "/logo.jpg",
-    description: "Fast-acting chilli seed extract cream for natural joint and muscle pain relief.",
-    longDescription: `Capsaicin Relief is a premium, locally produced chilli seed extract cream designed to 
-    provide fast-acting, natural heat therapy for sore muscles and joints. Formulated with 
-    capsaicin and anti-inflammatory agents, this cream delivers targeted pain relief directly 
-    to where it's needed — ideal for sports recovery, joint pain, arthritis, or tension relief.`,
-    specifications: {
-      weight: "30g",
-      dimensions: "5 cm x 15 cm x 4 cm",
-      manufacturer: "Eden Formulas",
-      model: "CR-01",
-    },
-  }
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const data = await api.getProducts();
+        // Ensure price is a number for all products
+        const processedProducts = data.map((product: any) => ({
+          ...product,
+          price: Number(product.price) || 0,
+          stock_quantity: Number(product.stock_quantity) || 0
+        }));
+        setProducts(processedProducts);
+        // Initialize quantities for each product
+        const initialQuantities: { [key: number]: number } = {};
+        processedProducts.forEach((product: Product) => {
+          initialQuantities[product.id] = 1;
+        });
+        setQuantities(initialQuantities);
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to load products",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const handleAddToCart = () => {
+    fetchProducts();
+  }, [toast]);
+
+  const updateQuantity = (productId: number, change: number) => {
+    setQuantities(prev => ({
+      ...prev,
+      [productId]: Math.max(1, (prev[productId] || 1) + change)
+    }));
+  };
+
+  const handleAddToCart = (product: Product) => {
+    const quantity = quantities[product.id] || 1;
     for (let i = 0; i < quantity; i++) {
       addItem({
-        id: product.id,
+        id: product.id.toString(),
         name: product.name,
-        price: product.price,
-        image: product.image,
+        price: Number(product.price) || 0,
+        image: product.image_url || "/placeholder.svg",
       })
     }
     toast({
@@ -47,154 +88,135 @@ export default function ShopPage() {
     })
   }
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-red-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading products...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-white py-8 px-4">
-      <div className="container mx-auto max-w-6xl">
-        <div className="grid lg:grid-cols-2 gap-12">
-          {/* Product Images */}
-          <div className="space-y-4">
-            <div className="aspect-square rounded-lg overflow-hidden bg-gray-100">
-              <Image
-                src={product.image || "/logo.jpg"}
-                alt={product.name}
-                width={600}
-                height={600}
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div className="grid grid-cols-4 gap-2">
-              {[...Array(4)].map((_, i) => (
-                <div
-                  key={i}
-                  className="aspect-square rounded-lg overflow-hidden bg-gray-100 cursor-pointer hover:opacity-80"
-                >
-                  <Image
-                    src={`/placeholder.svg?height=150&width=150`}
-                    alt={`${product.name} view ${i + 1}`}
-                    width={150}
-                    height={150}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Product Details */}
-          <div className="space-y-6">
-            <div>
-              <Badge className="bg-red-100 text-red-600 hover:bg-red-200 mb-2">Fast-Acting Relief</Badge>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{product.name}</h1>
-              <div className="flex items-center space-x-2 mb-4">
-                <div className="flex">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                  ))}
-                </div>
-                <span className="text-gray-600">(127 reviews)</span>
-              </div>
-              <p className="text-4xl font-bold text-red-600 mb-4">
-                R{product.price.toFixed(2)}
-                <span className="text-sm text-gray-500 font-normal ml-2">Incl. VAT</span>
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              <p className="text-gray-600 leading-relaxed">{product.longDescription}</p>
-            </div>
-
-            {/* Quantity Selector */}
-            <div className="space-y-4">
-              <div className="flex items-center space-x-4">
-                <span className="font-semibold">Quantity:</span>
-                <div className="flex items-center border rounded-lg">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    disabled={quantity <= 1}
-                  >
-                    <Minus className="w-4 h-4" />
-                  </Button>
-                  <span className="px-4 py-2 font-semibold">{quantity}</span>
-                  <Button variant="ghost" size="sm" onClick={() => setQuantity(quantity + 1)}>
-                    <Plus className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <Button
-                  size="lg"
-                  className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold"
-                  onClick={handleAddToCart}
-                >
-                  Add to Cart - R{(product.price * quantity).toFixed(2)}
-                </Button>
-                <Button size="lg" variant="outline" className="w-full border-red-600 text-red-600 hover:bg-red-50">
-                  Buy Now
-                </Button>
-              </div>
-            </div>
-
-            {/* Trust Badges */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-6 border-t">
-              <div className="flex items-center space-x-2 text-sm">
-                <Shield className="w-5 h-5 text-green-600" />
-                <span>Money-Back Guarantee</span>
-              </div>
-              <div className="flex items-center space-x-2 text-sm">
-                <Truck className="w-5 h-5 text-blue-600" />
-                <span>Fast Delivery</span>
-              </div>
-              <div className="flex items-center space-x-2 text-sm">
-                <Heart className="w-5 h-5 text-red-600" />
-                <span>Made in South Africa</span>
-              </div>
-            </div>
-          </div>
+    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">Our Products</h1>
+          <p className="text-xl text-gray-600">Premium capsaicin relief products for natural pain management</p>
         </div>
 
-        {/* Product Specifications */}
-        <div className="mt-16">
-          <h2 className="text-2xl font-bold mb-6">Product Specifications</h2>
-          <Card>
-            <CardContent className="p-6">
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="font-semibold mb-3">Details</h3>
-                  <dl className="space-y-2">
-                    <div className="flex justify-between">
-                      <dt className="text-gray-600">Weight:</dt>
-                      <dd className="font-medium">{product.specifications.weight}</dd>
+        {products.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-gray-500 text-lg">No products available at the moment.</p>
+            <p className="text-gray-400 mt-2">Please check back later or contact us for more information.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {products.map((product) => (
+              <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                <div className="aspect-square relative bg-gray-100">
+                  {product.image_url ? (
+                    <Image
+                      src={product.image_url}
+                      alt={product.name}
+                      fill
+                      className="object-cover"
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center h-full">
+                      <div className="text-gray-400 text-center">
+                        <div className="w-16 h-16 bg-gray-200 rounded-full mx-auto mb-2"></div>
+                        <p className="text-sm">No image available</p>
+                      </div>
                     </div>
-                    <div className="flex justify-between">
-                      <dt className="text-gray-600">Dimensions:</dt>
-                      <dd className="font-medium">{product.specifications.dimensions}</dd>
-                    </div>
-                    <div className="flex justify-between">
-                      <dt className="text-gray-600">Model:</dt>
-                      <dd className="font-medium">{product.specifications.model}</dd>
-                    </div>
-                    <div className="flex justify-between">
-                      <dt className="text-gray-600">Manufacturer:</dt>
-                      <dd className="font-medium">{product.specifications.manufacturer}</dd>
-                    </div>
-                  </dl>
+                  )}
+                  {product.stock_quantity > 0 && (
+                    <Badge className="absolute top-2 right-2 bg-green-600">
+                      In Stock ({product.stock_quantity})
+                    </Badge>
+                  )}
+                  {product.stock_quantity === 0 && (
+                    <Badge className="absolute top-2 right-2 bg-red-600">
+                      Out of Stock
+                    </Badge>
+                  )}
                 </div>
-                <div>
-                  <h3 className="font-semibold mb-3">Key Benefits</h3>
-                  <ul className="space-y-2 text-gray-600">
-                    <li>• Fast-acting heat therapy</li>
-                    <li>• Natural capsaicin extract</li>
-                    <li>• Non-greasy formula</li>
-                    <li>• Suitable for daily use</li>
-                    <li>• Locally manufactured</li>
-                  </ul>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+
+                <CardContent className="p-6">
+                  <div className="mb-4">
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">{product.name}</h3>
+                    <p className="text-gray-600 text-sm line-clamp-3">{product.description}</p>
+                  </div>
+
+                  <div className="mb-4">
+                    <span className="text-3xl font-bold text-red-600">
+                      ${formatPrice(product.price)}
+                    </span>
+                    {product.category && (
+                      <Badge variant="secondary" className="ml-2">
+                        {product.category}
+                      </Badge>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-sm text-gray-600">Quantity:</span>
+                    <div className="flex items-center border rounded-lg">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => updateQuantity(product.id, -1)}
+                        disabled={quantities[product.id] <= 1}
+                      >
+                        <Minus className="w-4 h-4" />
+                      </Button>
+                      <span className="px-4 py-2 font-semibold">{quantities[product.id] || 1}</span>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => updateQuantity(product.id, 1)}
+                      >
+                        <Plus className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  <Button 
+                    className="w-full bg-red-600 hover:bg-red-700"
+                    onClick={() => handleAddToCart(product)}
+                    disabled={product.stock_quantity === 0}
+                  >
+                    {product.stock_quantity === 0 ? (
+                      "Out of Stock"
+                    ) : (
+                      `Add to Cart - $${formatPrice(Number(product.price) * (quantities[product.id] || 1))}`
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {/* Features Section */}
+        <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="text-center">
+            <Shield className="w-12 h-12 text-red-600 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Quality Guaranteed</h3>
+            <p className="text-gray-600">Premium ingredients and rigorous testing</p>
+          </div>
+          <div className="text-center">
+            <Truck className="w-12 h-12 text-red-600 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Fast Shipping</h3>
+            <p className="text-gray-600">Quick delivery to your doorstep</p>
+          </div>
+          <div className="text-center">
+            <Heart className="w-12 h-12 text-red-600 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Customer Care</h3>
+            <p className="text-gray-600">Dedicated support for your needs</p>
+          </div>
         </div>
       </div>
     </div>

@@ -5,12 +5,14 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Menu, ShoppingCart, User } from "lucide-react"
+import { Menu, ShoppingCart, User, LogOut } from "lucide-react"
 import { useCart } from "@/components/cart-provider"
+import { useAuth } from "@/components/auth-provider"
 
 export function Header() {
   const [isOpen, setIsOpen] = useState(false)
   const { items } = useCart()
+  const { user, logout } = useAuth()
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0)
 
   const navigation = [
@@ -46,6 +48,24 @@ export function Header() {
           </nav>
 
           <div className="flex items-center space-x-4">
+            {user ? (
+              <>
+                <span className="hidden md:block text-sm text-gray-600">
+                  Welcome, {user.email}
+                </span>
+                <Button variant="ghost" size="sm" onClick={logout}>
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Logout
+                </Button>
+              </>
+            ) : (
+              <Link href="/login">
+                <Button variant="ghost" size="sm">
+                  <User className="w-4 h-4 mr-2" />
+                  Login
+                </Button>
+              </Link>
+            )}
             <Link href="/admin" className="hidden md:block">
               <Button variant="ghost" size="sm">
                 <User className="w-4 h-4 mr-2" />
