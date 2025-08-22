@@ -28,3 +28,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# development files
+test-backend-connection.js
+start-scripts.json
+lib/init-db.ts
+app/api/
