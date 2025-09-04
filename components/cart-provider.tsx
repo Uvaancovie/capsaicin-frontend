@@ -3,6 +3,7 @@
 import type React from "react"
 
 import { createContext, useContext, useReducer, type ReactNode } from "react"
+import { calculateShipping } from "@/lib/currency"
 
 interface CartItem {
   id: string
@@ -15,12 +16,16 @@ interface CartItem {
 interface CartState {
   items: CartItem[]
   total: number
+  selectedShipping: string
+  shippingCost: number
+  finalTotal: number
 }
 
 type CartAction =
   | { type: "ADD_ITEM"; payload: Omit<CartItem, "quantity"> }
   | { type: "REMOVE_ITEM"; payload: string }
   | { type: "UPDATE_QUANTITY"; payload: { id: string; quantity: number } }
+  | { type: "SET_SHIPPING"; payload: string }
   | { type: "CLEAR_CART" }
 
 const CartContext = createContext<{
@@ -28,9 +33,13 @@ const CartContext = createContext<{
   dispatch: React.Dispatch<CartAction>
   items: CartItem[]
   total: number
+  selectedShipping: string
+  shippingCost: number
+  finalTotal: number
   addItem: (item: Omit<CartItem, "quantity">) => void
   removeItem: (id: string) => void
   updateQuantity: (id: string, quantity: number) => void
+  setShipping: (shippingId: string) => void
   clearCart: () => void
 } | null>(null)
 
@@ -42,45 +51,85 @@ function cartReducer(state: CartState, action: CartAction): CartState {
         const updatedItems = state.items.map((item) =>
           item.id === action.payload.id ? { ...item, quantity: item.quantity + 1 } : item,
         )
+        const subtotal = updatedItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
+        const shippingCost = calculateShipping(subtotal, state.selectedShipping)
         return {
+          ...state,
           items: updatedItems,
-          total: updatedItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
+          total: subtotal,
+          shippingCost,
+          finalTotal: subtotal + shippingCost,
         }
       } else {
         const newItems = [...state.items, { ...action.payload, quantity: 1 }]
+        const subtotal = newItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
+        const shippingCost = calculateShipping(subtotal, state.selectedShipping)
         return {
+          ...state,
           items: newItems,
-          total: newItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
+          total: subtotal,
+          shippingCost,
+          finalTotal: subtotal + shippingCost,
         }
       }
     }
     case "REMOVE_ITEM": {
-      const newItems = state.items.filter((item) => item.id !== action.payload)
+      const updatedItems = state.items.filter((item) => item.id !== action.payload)
+      const subtotal = updatedItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
+      const shippingCost = calculateShipping(subtotal, state.selectedShipping)
       return {
-        items: newItems,
-        total: newItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
+        ...state,
+        items: updatedItems,
+        total: subtotal,
+        shippingCost,
+        finalTotal: subtotal + shippingCost,
       }
     }
     case "UPDATE_QUANTITY": {
-      const newItems = state.items
-        .map((item) =>
-          item.id === action.payload.id ? { ...item, quantity: Math.max(0, action.payload.quantity) } : item,
-        )
-        .filter((item) => item.quantity > 0)
+      const updatedItems = state.items.map((item) =>
+        item.id === action.payload.id ? { ...item, quantity: action.payload.quantity } : item,
+      )
+      const subtotal = updatedItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
+      const shippingCost = calculateShipping(subtotal, state.selectedShipping)
       return {
-        items: newItems,
-        total: newItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
+        ...state,
+        items: updatedItems,
+        total: subtotal,
+        shippingCost,
+        finalTotal: subtotal + shippingCost,
       }
     }
-    case "CLEAR_CART":
-      return { items: [], total: 0 }
+    case "SET_SHIPPING": {
+      const shippingCost = calculateShipping(state.total, action.payload)
+      return {
+        ...state,
+        selectedShipping: action.payload,
+        shippingCost,
+        finalTotal: state.total + shippingCost,
+      }
+    }
+    case "CLEAR_CART": {
+      return { 
+        items: [], 
+        total: 0, 
+        selectedShipping: 'standard',
+        shippingCost: 99.00,
+        finalTotal: 0
+      }
+    }
     default:
       return state
   }
 }
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(cartReducer, { items: [], total: 0 })
+  const [state, dispatch] = useReducer(cartReducer, { 
+    items: [], 
+    total: 0, 
+    selectedShipping: 'standard',
+    shippingCost: 99.00,
+    finalTotal: 0
+  })
 
   const addItem = (item: Omit<CartItem, "quantity">) => {
     dispatch({ type: "ADD_ITEM", payload: item })
@@ -94,6 +143,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
     dispatch({ type: "UPDATE_QUANTITY", payload: { id, quantity } })
   }
 
+  const setShipping = (shippingId: string) => {
+    dispatch({ type: "SET_SHIPPING", payload: shippingId })
+  }
+
   const clearCart = () => {
     dispatch({ type: "CLEAR_CART" })
   }
@@ -105,9 +158,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
         dispatch,
         items: state.items,
         total: state.total,
+        selectedShipping: state.selectedShipping,
+        shippingCost: state.shippingCost,
+        finalTotal: state.finalTotal,
         addItem,
         removeItem,
         updateQuantity,
+        setShipping,
         clearCart,
       }}
     >
