@@ -2,7 +2,7 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 // Optimized fetch wrapper with timeout and error handling
-const fetchWithTimeout = async (url: string, options: RequestInit = {}, timeout = 10000) => {
+const fetchWithTimeout = async (url: string, options: RequestInit = {}, timeout = 30000) => {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeout);
 
@@ -69,6 +69,13 @@ export const api = {
   // Products endpoints with optimized error handling
   getProducts: async () => {
     try {
+      // First try to wake up the backend if it's sleeping
+      try {
+        await fetchWithTimeout(`${API_BASE_URL}/health`, {}, 5000);
+      } catch (e) {
+        console.log('Backend may be sleeping, continuing with products request...');
+      }
+      
       const response = await fetchWithTimeout(`${API_BASE_URL}/products`);
       
       if (!response.ok) {
