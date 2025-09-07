@@ -212,3 +212,9 @@ git push origin main
 
 **Backend**: https://your-render-url.onrender.com
 **Frontend**: https://your-vercel-url.vercel.app
+
+
+# the following changes ahve been made to the original deployment guide to reflect the new setup with an external backend.
+
+# the frontend now connects to an external backend hosted on Render, so all references to local backend setup and deployment have been removed.
+
