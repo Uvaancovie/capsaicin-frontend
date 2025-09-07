@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { XCircle, RefreshCw, ArrowLeft } from 'lucide-react';
 import { formatZAR } from '@/lib/currency';
 
-export default function PaymentCancelPage() {
+function PaymentCancelContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [orderData, setOrderData] = useState<any>(null);
@@ -169,4 +169,29 @@ export default function PaymentCancelPage() {
       </div>
     </div>
   );
+}
+
+// Loading component for Suspense fallback
+function PaymentCancelLoading() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 flex items-center justify-center">
+      <Card className="w-full max-w-md">
+        <CardContent className="p-8">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto mb-4"></div>
+            <p>Loading...</p>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+// Main component with Suspense wrapper
+export default function PaymentCancelPage() {
+  return (
+    <Suspense fallback={<PaymentCancelLoading />}>
+      <PaymentCancelContent />
+    </Suspense>
+  )
 }

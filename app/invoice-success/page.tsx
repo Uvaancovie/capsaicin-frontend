@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { Suspense, useEffect, useState } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { api } from "@/lib/api"
 import { formatZAR } from "@/lib/currency"
@@ -27,7 +27,7 @@ interface Invoice {
   created_at: string
 }
 
-export default function InvoiceSuccessPage() {
+function InvoiceSuccessContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const { toast } = useToast()
@@ -405,5 +405,34 @@ export default function InvoiceSuccessPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+// Loading component for Suspense fallback
+function InvoiceSuccessLoading() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 py-12">
+      <div className="container mx-auto px-4">
+        <div className="max-w-4xl mx-auto">
+          <Card>
+            <CardContent className="p-8">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600 mx-auto mb-4"></div>
+                <p>Loading invoice details...</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Main component with Suspense wrapper
+export default function InvoiceSuccessPage() {
+  return (
+    <Suspense fallback={<InvoiceSuccessLoading />}>
+      <InvoiceSuccessContent />
+    </Suspense>
   )
 }
