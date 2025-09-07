@@ -12,15 +12,21 @@ import { Trash2, Edit, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface Product {
-  id: number;
+  id?: string;
+  _id?: string;
   name: string;
   description: string;
   price: number;
   stock_quantity: number;
   category: string;
   image_url: string;
-  created_at: string;
+  created_at?: string;
 }
+
+// Helper function to safely get product ID (handles both MongoDB _id and id fields)
+const getProductId = (product: Product): string => {
+  return product.id || product._id || '';
+};
 
 // Helper function to safely format price
 const formatPrice = (price: any): string => {
@@ -81,7 +87,7 @@ export function AdminProductManager() {
       };
 
       if (editingProduct) {
-        await api.updateProduct(editingProduct.id.toString(), productData);
+        await api.updateProduct(getProductId(editingProduct), productData);
         toast({
           title: "Success",
           description: "Product updated successfully",
@@ -132,11 +138,11 @@ export function AdminProductManager() {
     setShowAddForm(true);
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this product?')) return;
     
     try {
-      await api.deleteProduct(id.toString());
+      await api.deleteProduct(id);
       toast({
         title: "Success",
         description: "Product deleted successfully",
@@ -260,7 +266,7 @@ export function AdminProductManager() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {products.map((product) => (
-          <Card key={product.id}>
+          <Card key={getProductId(product)}>
             <CardHeader>
               <div className="flex justify-between items-start">
                 <div>
@@ -273,7 +279,7 @@ export function AdminProductManager() {
                   <Button variant="outline" size="sm" onClick={() => handleEdit(product)}>
                     <Edit className="w-4 h-4" />
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => handleDelete(product.id)}>
+                  <Button variant="outline" size="sm" onClick={() => handleDelete(getProductId(product))}>
                     <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>

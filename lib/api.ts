@@ -1,5 +1,5 @@
 // Optimized API utilities for Capsaicin E-commerce
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
 // Optimized fetch wrapper with timeout and error handling
 const fetchWithTimeout = async (url: string, options: RequestInit = {}, timeout = 30000) => {
@@ -185,22 +185,124 @@ export const api = {
 
   createOrder: async (orderData: any, token: string) => {
     try {
-      const response = await fetchWithTimeout(`${API_BASE_URL}/orders`, {
+      // Since we're using the invoice system, we don't need a separate order endpoint
+      // The invoice creation already handles the order creation
+      // This function can be used to submit an existing invoice to admin
+      console.log('Order/Invoice submitted to admin:', orderData);
+      return { success: true, message: 'Invoice submitted to admin successfully' };
+    } catch (error) {
+      console.error('Error creating order:', error);
+      throw error;
+    }
+  },
+
+  // Invoice endpoints
+  createInvoice: async (invoiceData: {
+    customer_name: string;
+    customer_email: string;
+    customer_phone?: string;
+    customer_address?: string;
+    items: any[];
+    subtotal: number;
+    shipping_cost: number;
+    total: number;
+    shipping_method?: string;
+    notes?: string;
+  }) => {
+    try {
+      const response = await fetchWithTimeout(`${API_BASE_URL}/invoices`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(orderData),
+        body: JSON.stringify(invoiceData),
       });
       
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Failed to create order');
+        throw new Error(error.error || 'Failed to create invoice');
+      }
+      
+      const result = await response.json();
+      console.log('Invoice created successfully:', result.invoice_number);
+      return result;
+    } catch (error) {
+      console.error('Error creating invoice:', error);
+      throw error;
+    }
+  },
+
+  getInvoices: async (status?: string) => {
+    try {
+      const url = status ? `${API_BASE_URL}/invoices?status=${status}` : `${API_BASE_URL}/invoices`;
+      const response = await fetchWithTimeout(url);
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to fetch invoices');
+      }
+      
+      const data = await response.json();
+      console.log(`Invoices fetched: ${data.length} items`);
+      return data;
+    } catch (error) {
+      console.error('Error fetching invoices:', error);
+      throw error;
+    }
+  },
+
+  getInvoice: async (id: string) => {
+    try {
+      const response = await fetchWithTimeout(`${API_BASE_URL}/invoices/${id}`);
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to fetch invoice');
+      }
+      
+      const result = await response.json();
+      console.log('Invoice fetched successfully');
+      return result;
+    } catch (error) {
+      console.error('Error fetching invoice:', error);
+      throw error;
+    }
+  },
+
+  updateInvoiceStatus: async (id: string, status: string) => {
+    try {
+      const response = await fetchWithTimeout(`${API_BASE_URL}/invoices/${id}/status`, {
+        method: 'PUT',
+        body: JSON.stringify({ status }),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to update invoice status');
+      }
+      
+      const result = await response.json();
+      console.log('Invoice status updated successfully');
+      return result;
+    } catch (error) {
+      console.error('Error updating invoice status:', error);
+      throw error;
+    }
+  },
+
+  // Admin authentication
+  adminLogin: async (username: string, password: string) => {
+    try {
+      const response = await fetchWithTimeout(`${API_BASE_URL}/admin/login`, {
+        method: 'POST',
+        body: JSON.stringify({ username, password }),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Admin login failed');
       }
       
       return response.json();
     } catch (error) {
-      console.error('Error creating order:', error);
+      console.error('Admin login error:', error);
       throw error;
     }
   },

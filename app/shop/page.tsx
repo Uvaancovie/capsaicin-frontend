@@ -11,14 +11,15 @@ import { useToast } from "@/hooks/use-toast"
 import { api } from "@/lib/api"
 
 interface Product {
-  id: number;
+  id?: number | string;
+  _id?: string;
   name: string;
   description: string;
   price: number;
   stock_quantity: number;
   category: string;
   image_url: string;
-  created_at: string;
+  created_at?: string;
 }
 
 // Helper function to safely format price
@@ -27,10 +28,15 @@ const formatPrice = (price: any): string => {
   return numPrice.toFixed(2);
 };
 
+// Helper function to get product ID consistently
+const getProductId = (product: Product): string => {
+  return (product.id || product._id || Math.random().toString()).toString();
+};
+
 export default function ShopPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [quantities, setQuantities] = useState<{ [key: number]: number }>({});
+  const [quantities, setQuantities] = useState<{ [key: string]: number }>({});
   const { addItem } = useCart()
   const { toast } = useToast()
 
@@ -46,9 +52,10 @@ export default function ShopPage() {
         }));
         setProducts(processedProducts);
         // Initialize quantities for each product
-        const initialQuantities: { [key: number]: number } = {};
+        const initialQuantities: { [key: string]: number } = {};
         processedProducts.forEach((product: Product) => {
-          initialQuantities[product.id] = 1;
+          const productId = getProductId(product);
+          initialQuantities[productId] = 1;
         });
         setQuantities(initialQuantities);
       } catch (error) {
@@ -65,7 +72,7 @@ export default function ShopPage() {
     fetchProducts();
   }, [toast]);
 
-  const updateQuantity = (productId: number, change: number) => {
+  const updateQuantity = (productId: string, change: number) => {
     setQuantities(prev => ({
       ...prev,
       [productId]: Math.max(1, (prev[productId] || 1) + change)
@@ -73,10 +80,12 @@ export default function ShopPage() {
   };
 
   const handleAddToCart = (product: Product) => {
-    const quantity = quantities[product.id] || 1;
+    // Use either id or _id, and provide a fallback
+    const productId = getProductId(product);
+    const quantity = quantities[productId] || 1;
     for (let i = 0; i < quantity; i++) {
       addItem({
-        id: product.id.toString(),
+        id: productId.toString(),
         name: product.name,
         price: Number(product.price) || 0,
         image: product.image_url || "/placeholder.svg",
@@ -115,7 +124,7 @@ export default function ShopPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {products.map((product) => (
-              <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+              <Card key={getProductId(product)} className="overflow-hidden hover:shadow-lg transition-shadow">
                 <div className="aspect-square relative bg-gray-100">
                   {product.image_url ? (
                     <Image
@@ -167,16 +176,16 @@ export default function ShopPage() {
                       <Button 
                         variant="ghost" 
                         size="sm" 
-                        onClick={() => updateQuantity(product.id, -1)}
-                        disabled={quantities[product.id] <= 1}
+                        onClick={() => updateQuantity(getProductId(product), -1)}
+                        disabled={quantities[getProductId(product)] <= 1}
                       >
                         <Minus className="w-4 h-4" />
                       </Button>
-                      <span className="px-4 py-2 font-semibold">{quantities[product.id] || 1}</span>
+                      <span className="px-4 py-2 font-semibold">{quantities[getProductId(product)] || 1}</span>
                       <Button 
                         variant="ghost" 
                         size="sm" 
-                        onClick={() => updateQuantity(product.id, 1)}
+                        onClick={() => updateQuantity(getProductId(product), 1)}
                       >
                         <Plus className="w-4 h-4" />
                       </Button>
@@ -191,7 +200,7 @@ export default function ShopPage() {
                     {product.stock_quantity === 0 ? (
                       "Out of Stock"
                     ) : (
-                      `Add to Cart - $${formatPrice(Number(product.price) * (quantities[product.id] || 1))}`
+                      `Add to Cart - $${formatPrice(Number(product.price) * (quantities[getProductId(product)] || 1))}`
                     )}
                   </Button>
                 </CardContent>

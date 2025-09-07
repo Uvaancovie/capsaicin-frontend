@@ -7,9 +7,10 @@ import { Plus, Minus, Trash2, ShoppingBag } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { useCart } from "@/components/cart-provider"
+import { formatZAR } from "@/lib/currency"
 
 export default function CartPage() {
-  const { items, total, updateQuantity, removeItem, clearCart } = useCart()
+  const { items, total, finalTotal, shippingCost, updateQuantity, removeItem, clearCart } = useCart()
 
   if (items.length === 0) {
     return (
@@ -50,7 +51,7 @@ export default function CartPage() {
 
                     <div className="flex-1">
                       <h3 className="font-semibold text-gray-900">{item.name}</h3>
-                      <p className="text-red-600 font-bold">R{item.price.toFixed(2)}</p>
+                      <p className="text-red-600 font-bold">{formatZAR(item.price)}</p>
                     </div>
 
                     <div className="flex items-center space-x-2">
@@ -104,7 +105,7 @@ export default function CartPage() {
                       <span>
                         {item.name} x {item.quantity}
                       </span>
-                      <span>R{(item.price * item.quantity).toFixed(2)}</span>
+                      <span>{formatZAR(item.price * item.quantity)}</span>
                     </div>
                   ))}
                 </div>
@@ -114,11 +115,11 @@ export default function CartPage() {
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span>Subtotal</span>
-                    <span>R{total.toFixed(2)}</span>
+                    <span>{formatZAR(total)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Shipping</span>
-                    <span>Free</span>
+                    <span>{shippingCost > 0 ? formatZAR(shippingCost) : 'Free'}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>VAT (15%)</span>
@@ -130,14 +131,16 @@ export default function CartPage() {
 
                 <div className="flex justify-between font-bold text-lg">
                   <span>Total</span>
-                  <span className="text-red-600">R{total.toFixed(2)}</span>
+                  <span className="text-red-600">{formatZAR(finalTotal)}</span>
                 </div>
 
-                <Button className="w-full bg-red-600 hover:bg-red-700" size="lg">
-                  Proceed to Checkout
+                <Button className="w-full bg-red-600 hover:bg-red-700" size="lg" asChild>
+                  <Link href="/checkout">
+                    Proceed to Checkout
+                  </Link>
                 </Button>
 
-                <div className="text-xs text-gray-500 text-center">Secure checkout powered by Stripe</div>
+                <div className="text-xs text-gray-500 text-center">Secure checkout powered by PayFast</div>
               </CardContent>
             </Card>
           </div>
