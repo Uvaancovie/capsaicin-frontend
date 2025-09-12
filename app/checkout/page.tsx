@@ -1,159 +1,147 @@
 "use client";
 
 import { useState } from 'react';
-import { InvoiceCheckout } from '@/components/invoice-checkout';
-import PayPalCheckout from '@/components/paypal-checkout';
-import { ShippingOptions } from '@/components/shipping-options';
 import { useCart } from '@/components/cart-provider';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, FileText, CreditCard } from 'lucide-react';
-import PayGateButton from '@/components/PayGateButton';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
-type PaymentMethod = 'invoice' | 'paypal';
-
 export default function CheckoutPage() {
-  const { items, selectedShipping, setShipping, total } = useCart();
+  const { items, total } = useCart();
   const router = useRouter();
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   if (items.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 py-12 px-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center">
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">Checkout</h1>
-            <p className="text-gray-600 mb-8">Your cart is empty</p>
-            <Button onClick={() => router.push('/shop')}>
-              Continue Shopping
-            </Button>
-          </div>
+        <div className="max-w-4xl mx-auto text-center">
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">Checkout</h1>
+          <p className="text-gray-600 mb-8">Your cart is empty</p>
+          <Button onClick={() => router.push('/shop')}>Continue Shopping</Button>
         </div>
       </div>
     );
   }
 
+  // Free shipping as requested
+  const shippingLabel = 'Free Shipping';
+  const shippingCost = 0;
+  const grandTotal = (Number(total || 0) + shippingCost).toFixed(2);
+
+  // Proceed to PayGate: call backend /paygate/create and open PayGate page
+  const proceedToPaygate = async () => {
+    try {
+      setIsProcessing(true);
+      const orderId = `INV-${Date.now().toString().slice(-6)}`; // temporary reference
+
+      // Determine API base URL at runtime. Use NEXT_PUBLIC_API_URL when set.
+      // In local dev, detect browser hostname and route to backend at port 4000 to avoid hitting Next dev server port (3001).
+      let apiBase = '';
+      if (typeof window !== 'undefined') {
+        apiBase = (process.env.NEXT_PUBLIC_API_URL && String(process.env.NEXT_PUBLIC_API_URL).trim()) || (window.location.hostname === 'localhost' ? `http://${window.location.hostname}:4000` : '');
+      } else {
+        apiBase = (process.env.NEXT_PUBLIC_API_URL && String(process.env.NEXT_PUBLIC_API_URL).trim()) || '';
+      }
+      const endpointUrl = apiBase ? `${apiBase.replace(/\/$/, '')}/paygate/create` : '/paygate/create';
+      console.log('Calling PayGate create at', endpointUrl);
+
+      const res = await fetch(endpointUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId, amountRands: Number(grandTotal), currency: 'ZAR', description: 'Order payment' })
+      });
+
+      // Some hosts may return HTML error pages (Unexpected token '<'). Read as text and attempt JSON parse.
+      const text = await res.text();
+      let data: any = null;
+      try {
+        data = JSON.parse(text);
+      } catch (e) {
+        console.error('Non-JSON response from /paygate/create:', text);
+        alert('Unexpected response from payment server. Check backend URL and server logs.');
+        setIsProcessing(false);
+        return;
+      }
+
+      if (!data || !data.success) {
+        console.error('PayGate create failed', data);
+        setIsProcessing(false);
+        return;
+      }
+
+      // Build and submit form to PayGate in a new tab/window
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = data.endpoint || 'https://secure.paygate.co.za/paypage';
+      form.target = '_blank';
+
+      // Append fields
+      for (const [k, v] of Object.entries(data.fields || {})) {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = k;
+        input.value = String(v);
+        form.appendChild(input);
+      }
+
+      // signature
+      const sigField = document.createElement('input');
+      sigField.type = 'hidden';
+      sigField.name = 'SIGNATURE';
+      sigField.value = data.signature || '';
+      form.appendChild(sigField);
+
+      document.body.appendChild(form);
+      form.submit();
+      form.remove();
+      setIsProcessing(false);
+    } catch (err) {
+      console.error('Error creating PayGate payment', err);
+      setIsProcessing(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
+      <div className="max-w-3xl mx-auto">
         <div className="mb-8">
-          <Button
-            variant="ghost"
-            onClick={() => router.back()}
-            className="mb-4"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
+          <Button variant="ghost" onClick={() => router.back()} className="mb-4">
+            <ArrowLeft className="h-4 w-4 mr-2" /> Back
           </Button>
           <h1 className="text-3xl font-bold text-gray-900">Checkout</h1>
-          <p className="text-gray-600 mt-2">Choose your preferred payment method</p>
+          <p className="text-gray-600 mt-2">Payment method: PayGate (card)</p>
         </div>
 
-        {!paymentMethod ? (
-          /* Payment Method Selection */
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <Card 
-              className="cursor-pointer hover:shadow-lg transition-shadow border-2 hover:border-orange-500"
-              onClick={() => setPaymentMethod('invoice')}
-            >
-              <CardHeader className="text-center">
-                <FileText className="h-12 w-12 mx-auto text-orange-600 mb-4" />
-                <CardTitle>Generate Invoice</CardTitle>
-                <CardDescription>
-                  Create an invoice and submit to our admin team for manual processing. 
-                  We'll contact you within 24 hours.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button className="w-full" variant="outline">
-                  Choose Invoice Method
-                </Button>
-              </CardContent>
-            </Card>
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Order Summary</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex justify-between py-2">
+              <div>Subtotal</div>
+              <div>R {Number(total).toFixed(2)}</div>
+            </div>
+            <div className="flex justify-between py-2">
+              <div>Shipping</div>
+              <div>{shippingLabel}</div>
+            </div>
+            <div className="flex justify-between font-bold text-lg pt-4">
+              <div>Total</div>
+              <div>R {grandTotal}</div>
+            </div>
+          </CardContent>
+        </Card>
 
-            <Card 
-              className="cursor-pointer hover:shadow-lg transition-shadow border-2 hover:border-blue-500"
-              onClick={() => setPaymentMethod('paypal')}
-            >
-              <CardHeader className="text-center">
-                <CreditCard className="h-12 w-12 mx-auto text-blue-600 mb-4" />
-                <CardTitle>PayPal Payment</CardTitle>
-                <CardDescription>
-                  Pay instantly with PayPal or credit card. 
-                  Secure, fast, and immediate order processing.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button className="w-full bg-yellow-500 hover:bg-yellow-600 text-black">
-                  Choose PayPal
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-        ) : (
-          <div className="mb-4">
-            <Button
-              variant="ghost"
-              onClick={() => setPaymentMethod(null)}
-              className="mb-4"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Change Payment Method
-            </Button>
-          </div>
-        )}
+        <div className="mb-6">
+          <p className="text-sm text-gray-600">Shipping: {shippingLabel} — no charge applied.</p>
+        </div>
 
-        {paymentMethod === 'invoice' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Shipping Options */}
-            <div>
-              <ShippingOptions 
-                selectedShipping={selectedShipping}
-                onShippingChange={setShipping}
-                cartTotal={total}
-              />
-            </div>
-
-            {/* Invoice Checkout */}
-            <div>
-              <InvoiceCheckout 
-                onInvoiceGenerated={() => {
-                  // Optional: Track invoice generation
-                  console.log('Invoice generated successfully');
-                }}
-              />
-            </div>
-          </div>
-        )}
-
-        {paymentMethod === 'paypal' && (
-          <div>
-            <PayPalCheckout />
-            <div className="mt-6">
-              {/* Quick R5 test PayGate button for QA */}
-              <PayGateButton orderId="TEST-R5" amountRands={5.00} description="R5 Live Test" />
-            </div>
-          </div>
-        )}
-
-        {/* Security & Trust Indicators */}
-        <div className="mt-12 text-center">
-          <div className="inline-flex items-center space-x-6 text-sm text-gray-500">
-            <div className="flex items-center">
-              <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-              SSL Encrypted
-            </div>
-            <div className="flex items-center">
-              <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-              {paymentMethod === 'paypal' ? 'PayPal Secure' : 'Secure Invoice Generation'}
-            </div>
-            <div className="flex items-center">
-              <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-              {paymentMethod === 'paypal' ? 'Instant Processing' : 'Admin Dashboard Integration'}
-            </div>
-          </div>
+        <div className="flex gap-4">
+          <Button onClick={proceedToPaygate} disabled={isProcessing} className="bg-orange-600 hover:bg-orange-700">
+            {isProcessing ? 'Processing...' : `Proceed to Pay with PayGate (R ${grandTotal})`}
+          </Button>
+          <Button variant="ghost" onClick={() => router.push('/shop')}>Continue Shopping</Button>
         </div>
       </div>
     </div>

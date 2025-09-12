@@ -4,27 +4,30 @@ interface Props {
   orderId: string
   amountRands: number
   description?: string
+  apiBaseUrl?: string // optional override for dev
 }
 
 // Build and submit a form to the PayGate endpoint in a new window
-export default function PayGateButton({ orderId, amountRands, description }: Props) {
+export default function PayGateButton({ orderId, amountRands, description, apiBaseUrl }: Props) {
   const handleClick = async () => {
     try {
-      const res = await fetch('/paygate/create', {
+      const base = apiBaseUrl || (process.env.NEXT_PUBLIC_API_URL ?? '')
+      const endpointUrl = base ? `${base.replace(/\/$/, '')}/paygate/create` : '/paygate/create'
+      const res = await fetch(endpointUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ orderId, amountRands, description })
       })
 
       const json = await res.json()
-      if (!json.success) {
-        alert('Failed to create PayGate form: ' + (json.message || 'Unknown'))
+      if (!json || !json.success) {
+        alert('Failed to create PayGate form: ' + (json?.message || 'Unknown'))
         return
       }
 
       const endpoint = json.endpoint || 'https://secure.paygate.co.za/paypage'
       const fields = json.fields || {}
-      const signature = json.signature
+      const signature = json.signature || ''
 
       // Build and submit the form with returned fields and signature
       const form = document.createElement('form')
@@ -32,17 +35,18 @@ export default function PayGateButton({ orderId, amountRands, description }: Pro
       form.action = endpoint
       form.target = '_blank'
 
-      const addField = (name: string, value: string) => {
+      const addField = (name: string, value: any) => {
         const input = document.createElement('input')
         input.type = 'hidden'
         input.name = name
-        input.value = String(value)
+        input.value = String(value ?? '')
         form.appendChild(input)
       }
 
-      Object.keys(fields).forEach(k => addField(k, fields[k]))
-      if (signature) addField('signature', signature)
-      addField('signature_method', json.signature_method || 'HMAC-SHA256')
+      Object.entries(fields).forEach(([k, v]) => addField(k, v))
+      // Match server's returned signature key
+      if (signature) addField('SIGNATURE', signature)
+      addField('SIGNATURE_METHOD', json.signature_method || 'HMAC-SHA256')
 
       document.body.appendChild(form)
       form.submit()

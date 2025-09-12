@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: capsaicin-backend
+    env: node
+    plan: free
+    region: oregon
+    branch: main
+    buildCommand: "cd backend && npm install"
+    startCommand: "cd backend && npm run start"
+    envVars:
+      - key: MONGODB_URI
+        scope: environment
+      - key: PAYGATE_ID
+        scope: environment
+      - key: PAYGATE_ENCRYPTION_KEY
+        scope: environment
+      - key: PAYGATE_RETURN_URL
+        scope: environment
+      - key: PAYGATE_NOTIFY_URL
+        scope: environment
+    repo: https://github.com/Uvaancovie/capsaicin-frontend
+    rootDir: .
