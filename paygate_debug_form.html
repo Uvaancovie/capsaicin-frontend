@@ -8,9 +8,9 @@
 </head>
 <body>
   <h1>PayGate Debug Form</h1>
-  <p>This form is prefilled with the most recent signed payload from your backend. Submitting will POST to PayGate's `/paypage` endpoint.</p>
+  <p>This form is prefilled with the most recent PayWeb3 initiate payload from your backend. Submitting will POST to PayGate's `payweb3/process.trans` endpoint (PAY_REQUEST_ID + CHECKSUM).</p>
 
-  <form id="paygateForm" method="POST" action="https://secure.paygate.co.za/paypage">
+  <form id="paygateForm" method="POST" action="https://secure.paygate.co.za/payweb3/process.trans">
     <label>PAYGATE_ID
       <input type="text" name="PAYGATE_ID" value="1051358100016" />
     </label>
@@ -35,16 +35,16 @@
     <label>TIMESTAMP
       <input type="text" name="TIMESTAMP" value="1757687784907" />
     </label>
-    <label>SIGNATURE
-      <input type="text" name="SIGNATURE" value="6bda8f0aa112486e8be61f86e068f547bb01c151b3e429176e37189624f8192a" />
+    <label>PAY_REQUEST_ID
+      <input type="text" name="PAY_REQUEST_ID" value="" />
     </label>
-    <label>SIGNATURE_METHOD
-      <input type="text" name="SIGNATURE_METHOD" value="HMAC-SHA256" />
+    <label>CHECKSUM
+      <input type="text" name="CHECKSUM" value="" />
     </label>
 
     <button type="submit">Submit to PayGate</button>
     <button type="button" id="openWindow">Open in New Window and Submit</button>
-    <button type="button" id="callCreate">Call /paygate/create (fill form)</button>
+  <button type="button" id="callCreate">Call /paygate/initiate (fill form)</button>
   </form>
 
   <script>
@@ -64,9 +64,9 @@
 
     // Call backend /paygate/create and populate the form
     document.getElementById('callCreate').addEventListener('click', async function(){
-      info.textContent = 'Calling /paygate/create...';
+      info.textContent = 'Calling /paygate/initiate...';
       try {
-        const resp = await fetch('https://capsaicin-backend.onrender.com/paygate/create', {
+        const resp = await fetch('https://capsaicin-backend.onrender.com/paygate/initiate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ orderId: 'DEBUG-' + Date.now(), amountRands: 1, currency: 'ZAR', description: 'debug test' })
@@ -94,8 +94,9 @@
           }
 
           Object.keys(f).forEach(k => setIfPresent(k, f[k]));
-          setIfPresent('SIGNATURE', json.signature || '');
-          setIfPresent('SIGNATURE_METHOD', json.signature_method || 'HMAC-SHA256');
+          // Expect PAY_REQUEST_ID and CHECKSUM
+          setIfPresent('PAY_REQUEST_ID', f.PAY_REQUEST_ID || json.fields.PAY_REQUEST_ID || '');
+          setIfPresent('CHECKSUM', f.CHECKSUM || json.fields.CHECKSUM || '');
           info.textContent += '\n\nForm fields populated. You can now click "Open in New Window and Submit".';
         }
       } catch (err) {

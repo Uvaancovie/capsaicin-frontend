@@ -42,7 +42,7 @@ export default function CheckoutPage() {
   const shippingLabel = shippingCost === 0 ? 'Free Shipping' : 'Shipping';
   const grandTotal = (Number(total || 0) + (shippingCost || 0)).toFixed(2);
 
-  // Proceed to PayGate: call backend /paygate/create and open PayGate page
+  // Proceed to PayGate: call backend /paygate/initiate (PayWeb3) and open PayGate process page
   const proceedToPaygate = async () => {
     try {
       setIsProcessing(true);
@@ -72,42 +72,39 @@ export default function CheckoutPage() {
       } else {
         apiBase = (process.env.NEXT_PUBLIC_API_URL && String(process.env.NEXT_PUBLIC_API_URL).trim()) || '';
       }
-      const endpointUrl = apiBase ? `${apiBase.replace(/\/$/, '')}/paygate/create` : '/paygate/create';
-      console.log('Calling PayGate create at', endpointUrl);
+      const endpointUrl = apiBase ? `${apiBase.replace(/\/$/, '')}/paygate/initiate` : '/paygate/initiate';
+      console.log('Calling PayGate initiate at', endpointUrl);
 
       const res = await fetch(endpointUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderId, amountRands: Number(grandTotal), currency: 'ZAR', description: 'Order payment' })
+        body: JSON.stringify({ orderId, amountRands: Number(grandTotal), email: '' })
       });
 
-      // Some hosts may return HTML error pages (Unexpected token '<'). Read as text and attempt JSON parse.
       const text = await res.text();
       let data: any = null;
       try {
         data = JSON.parse(text);
       } catch (e) {
-        console.error('Non-JSON response from /paygate/create:', text);
+        console.error('Non-JSON response from /paygate/initiate:', text);
         alert('Unexpected response from payment server. Check backend URL and server logs.');
         setIsProcessing(false);
         return;
       }
 
-      if (!data || !data.success) {
-        console.error('PayGate create failed', data);
+      if (!data || !data.success || !data.processUrl || !data.fields) {
+        console.error('PayGate initiate failed', data);
         setIsProcessing(false);
         return;
       }
 
-      // Build and submit form to PayGate in a new tab/window
+      // Build and submit form to PayWeb3 process.trans with PAY_REQUEST_ID and CHECKSUM
       const form = document.createElement('form');
-  form.method = 'POST';
-  form.action = data.endpoint || 'https://secure.paygate.co.za/paypage';
-  // Submit into the previously opened window (if available) to avoid popup blocking
-  // target by fixed name to avoid cross-origin reads
-  form.target = payWindow ? payWindowName : '_blank';
+      form.method = 'POST';
+      form.action = data.processUrl || 'https://secure.paygate.co.za/payweb3/process.trans';
+      form.target = payWindow ? payWindowName : '_blank';
 
-      // Append fields
+      // Append the required fields (PAY_REQUEST_ID + CHECKSUM)
       for (const [k, v] of Object.entries(data.fields || {})) {
         const input = document.createElement('input');
         input.type = 'hidden';
@@ -116,27 +113,10 @@ export default function CheckoutPage() {
         form.appendChild(input);
       }
 
-  // Debug log returned payload
-  console.log('PayGate create response:', { endpoint: data.endpoint, fields: data.fields, signature: data.signature, signature_method: data.signature_method })
-
-  // signature
-  const sigField = document.createElement('input');
-  sigField.type = 'hidden';
-  sigField.name = 'SIGNATURE';
-  sigField.value = data.signature || '';
-  form.appendChild(sigField);
-
-  // signature method (some PayGate setups require an explicit field)
-  const sigMethodField = document.createElement('input');
-  sigMethodField.type = 'hidden';
-  sigMethodField.name = 'SIGNATURE_METHOD';
-  sigMethodField.value = data.signature_method || 'HMAC-SHA256';
-  form.appendChild(sigMethodField);
-
-      document.body.appendChild(form);
-      form.submit();
-      form.remove();
-      setIsProcessing(false);
+  document.body.appendChild(form);
+  form.submit();
+  form.remove();
+  setIsProcessing(false);
     } catch (err) {
       console.error('Error creating PayGate payment', err);
       setIsProcessing(false);

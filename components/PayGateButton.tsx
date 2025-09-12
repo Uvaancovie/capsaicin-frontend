@@ -16,7 +16,7 @@ export default function PayGateButton({ orderId, amountRands, description, apiBa
       if (!base && typeof window !== 'undefined' && window.location.hostname === 'localhost') {
         base = `http://${window.location.hostname}:4000`
       }
-      const endpointUrl = base ? `${base.replace(/\/$/, '')}/paygate/create` : '/paygate/create'
+  const endpointUrl = base ? `${base.replace(/\/$/, '')}/paygate/initiate` : '/paygate/initiate'
 
       // Open a blank window early to preserve the user gesture and avoid popup blockers.
       let payWindow = null
@@ -51,15 +51,14 @@ export default function PayGateButton({ orderId, amountRands, description, apiBa
         return
       }
 
-      const endpoint = json.endpoint || 'https://secure.paygate.co.za/paypage'
+      const processUrl = json.processUrl || 'https://secure.paygate.co.za/payweb3/process.trans'
       const fields = json.fields || {}
-      const signature = json.signature || ''
 
-      // Build and submit the form with returned fields and signature
+      // Build and submit the form with PAY_REQUEST_ID + CHECKSUM
       const form = document.createElement('form')
-  form.method = 'POST'
-  form.action = endpoint
-  form.target = payWindow ? (payWindow.name || 'paygate_window') : '_blank'
+      form.method = 'POST'
+      form.action = processUrl
+      form.target = payWindow ? (payWindow.name || 'paygate_window') : '_blank'
 
       const addField = (name: string, value: any) => {
         const input = document.createElement('input')
@@ -70,9 +69,6 @@ export default function PayGateButton({ orderId, amountRands, description, apiBa
       }
 
       Object.entries(fields).forEach(([k, v]) => addField(k, v))
-      // Match server's returned signature key
-      if (signature) addField('SIGNATURE', signature)
-      addField('SIGNATURE_METHOD', json.signature_method || 'HMAC-SHA256')
 
       document.body.appendChild(form)
       form.submit()
