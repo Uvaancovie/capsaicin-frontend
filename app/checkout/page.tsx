@@ -8,7 +8,7 @@ import { ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export default function CheckoutPage() {
-  const { items, total } = useCart();
+  const { items, total, shippingCost, hasTestProduct, setShipping } = useCart();
   const router = useRouter();
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -24,10 +24,14 @@ export default function CheckoutPage() {
     );
   }
 
-  // Free shipping as requested
-  const shippingLabel = 'Free Shipping';
-  const shippingCost = 0;
-  const grandTotal = (Number(total || 0) + shippingCost).toFixed(2);
+  // Auto-select free shipping if cart contains test product
+  if (typeof window !== 'undefined' && hasTestProduct && hasTestProduct()) {
+    // ensure shipping is set to 'free' in cart state
+    try { setShipping('free') } catch (e) { /* ignore in SSR */ }
+  }
+
+  const shippingLabel = shippingCost === 0 ? 'Free Shipping' : 'Shipping';
+  const grandTotal = (Number(total || 0) + (shippingCost || 0)).toFixed(2);
 
   // Proceed to PayGate: call backend /paygate/create and open PayGate page
   const proceedToPaygate = async () => {

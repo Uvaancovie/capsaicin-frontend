@@ -28,6 +28,15 @@ type CartAction =
   | { type: "SET_SHIPPING"; payload: string }
   | { type: "CLEAR_CART" }
 
+const TEST_PRODUCT_ID = (process.env.NEXT_PUBLIC_TEST_PRODUCT_ID || '').trim()
+
+const hasTestProductHelper = (items: CartItem[]) => {
+  if (TEST_PRODUCT_ID) {
+    return items.some(i => String(i.id) === TEST_PRODUCT_ID || String((i as any)._id || '') === TEST_PRODUCT_ID)
+  }
+  return items.some(i => /test/i.test(i.id) || /test/i.test(i.name))
+}
+
 const CartContext = createContext<{
   state: CartState
   dispatch: React.Dispatch<CartAction>
@@ -36,6 +45,7 @@ const CartContext = createContext<{
   selectedShipping: string
   shippingCost: number
   finalTotal: number
+  hasTestProduct: (items?: CartItem[]) => boolean
   addItem: (item: Omit<CartItem, "quantity">) => void
   removeItem: (id: string) => void
   updateQuantity: (id: string, quantity: number) => void
@@ -44,6 +54,8 @@ const CartContext = createContext<{
 } | null>(null)
 
 function cartReducer(state: CartState, action: CartAction): CartState {
+  const hasTestProduct = (items: CartItem[]) => hasTestProductHelper(items)
+
   switch (action.type) {
     case "ADD_ITEM": {
       const existingItem = state.items.find((item) => item.id === action.payload.id)
@@ -51,8 +63,8 @@ function cartReducer(state: CartState, action: CartAction): CartState {
         const updatedItems = state.items.map((item) =>
           item.id === action.payload.id ? { ...item, quantity: item.quantity + 1 } : item,
         )
-        const subtotal = updatedItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
-        const shippingCost = calculateShipping(subtotal, state.selectedShipping)
+  const subtotal = updatedItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
+  const shippingCost = hasTestProduct(updatedItems) ? 0 : calculateShipping(subtotal, state.selectedShipping)
         return {
           ...state,
           items: updatedItems,
@@ -63,7 +75,7 @@ function cartReducer(state: CartState, action: CartAction): CartState {
       } else {
         const newItems = [...state.items, { ...action.payload, quantity: 1 }]
         const subtotal = newItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
-        const shippingCost = calculateShipping(subtotal, state.selectedShipping)
+        const shippingCost = hasTestProduct(newItems) ? 0 : calculateShipping(subtotal, state.selectedShipping)
         return {
           ...state,
           items: newItems,
@@ -76,7 +88,7 @@ function cartReducer(state: CartState, action: CartAction): CartState {
     case "REMOVE_ITEM": {
       const updatedItems = state.items.filter((item) => item.id !== action.payload)
       const subtotal = updatedItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
-      const shippingCost = calculateShipping(subtotal, state.selectedShipping)
+      const shippingCost = hasTestProduct(updatedItems) ? 0 : calculateShipping(subtotal, state.selectedShipping)
       return {
         ...state,
         items: updatedItems,
@@ -90,7 +102,7 @@ function cartReducer(state: CartState, action: CartAction): CartState {
         item.id === action.payload.id ? { ...item, quantity: action.payload.quantity } : item,
       )
       const subtotal = updatedItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
-      const shippingCost = calculateShipping(subtotal, state.selectedShipping)
+      const shippingCost = hasTestProduct(updatedItems) ? 0 : calculateShipping(subtotal, state.selectedShipping)
       return {
         ...state,
         items: updatedItems,
@@ -100,7 +112,7 @@ function cartReducer(state: CartState, action: CartAction): CartState {
       }
     }
     case "SET_SHIPPING": {
-      const shippingCost = calculateShipping(state.total, action.payload)
+      const shippingCost = hasTestProduct(state.items) ? 0 : calculateShipping(state.total, action.payload)
       return {
         ...state,
         selectedShipping: action.payload,
@@ -158,6 +170,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
         dispatch,
         items: state.items,
         total: state.total,
+  // expose a small helper so UI can auto-select free shipping when appropriate
+  hasTestProduct: (itemsArg?: CartItem[]) => hasTestProductHelper(itemsArg ?? state.items),
         selectedShipping: state.selectedShipping,
         shippingCost: state.shippingCost,
         finalTotal: state.finalTotal,
