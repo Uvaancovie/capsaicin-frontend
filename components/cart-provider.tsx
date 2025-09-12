@@ -45,7 +45,7 @@ const CartContext = createContext<{
   selectedShipping: string
   shippingCost: number
   finalTotal: number
-  hasTestProduct: (items?: CartItem[]) => boolean
+  hasTestProduct: boolean
   addItem: (item: Omit<CartItem, "quantity">) => void
   removeItem: (id: string) => void
   updateQuantity: (id: string, quantity: number) => void
@@ -163,6 +163,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     dispatch({ type: "CLEAR_CART" })
   }
 
+  const isTestCart = hasTestProductHelper(state.items)
+
   return (
     <CartContext.Provider
       value={{
@@ -170,8 +172,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
         dispatch,
         items: state.items,
         total: state.total,
-  // expose a small helper so UI can auto-select free shipping when appropriate
-  hasTestProduct: (itemsArg?: CartItem[]) => hasTestProductHelper(itemsArg ?? state.items),
+        // expose a small boolean so UI can auto-select free shipping when appropriate
+        hasTestProduct: isTestCart,
         selectedShipping: state.selectedShipping,
         shippingCost: state.shippingCost,
         finalTotal: state.finalTotal,

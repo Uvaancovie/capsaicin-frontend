@@ -11,15 +11,41 @@ interface Props {
 export default function PayGateButton({ orderId, amountRands, description, apiBaseUrl }: Props) {
   const handleClick = async () => {
     try {
-      const base = apiBaseUrl || (process.env.NEXT_PUBLIC_API_URL ?? '')
+      // Determine API base at runtime; prefer explicit prop, then NEXT_PUBLIC_API_URL, then localhost:4000 for dev
+      let base = apiBaseUrl || (process.env.NEXT_PUBLIC_API_URL ?? '')
+      if (!base && typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+        base = `http://${window.location.hostname}:4000`
+      }
       const endpointUrl = base ? `${base.replace(/\/$/, '')}/paygate/create` : '/paygate/create'
+
+      // Open a blank window early to preserve the user gesture and avoid popup blockers.
+      let payWindow = null
+      try {
+        payWindow = window.open('', 'paygate_window')
+        if (!payWindow) {
+          alert('Popup blocked: please allow popups for this site to complete payment')
+        }
+      } catch (e) {
+        console.warn('Failed to open pay window early', e)
+      }
+
       const res = await fetch(endpointUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ orderId, amountRands, description })
       })
 
-      const json = await res.json()
+      // Some hosts (Next dev) may return HTML error pages. Read as text and parse JSON safely.
+      const text = await res.text()
+      let json: any = null
+      try {
+        json = JSON.parse(text)
+      } catch (e) {
+        console.error('Non-JSON response from PayGate create:', text)
+        alert('Unexpected response from payment server. Check backend URL and server logs.')
+        return
+      }
+
       if (!json || !json.success) {
         alert('Failed to create PayGate form: ' + (json?.message || 'Unknown'))
         return
@@ -31,9 +57,9 @@ export default function PayGateButton({ orderId, amountRands, description, apiBa
 
       // Build and submit the form with returned fields and signature
       const form = document.createElement('form')
-      form.method = 'POST'
-      form.action = endpoint
-      form.target = '_blank'
+  form.method = 'POST'
+  form.action = endpoint
+  form.target = payWindow ? (payWindow.name || 'paygate_window') : '_blank'
 
       const addField = (name: string, value: any) => {
         const input = document.createElement('input')

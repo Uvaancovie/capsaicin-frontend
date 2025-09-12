@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>PayGate Debug Form</title>
+  <style>body{font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;padding:24px}label{display:block;margin:8px 0 4px}input[type=text]{width:100%;padding:8px}button{margin-top:12px;padding:8px 12px}</style>
+</head>
+<body>
+  <h1>PayGate Debug Form</h1>
+  <p>This form is prefilled with the most recent signed payload from your backend. Submitting will POST to PayGate's `/paypage` endpoint.</p>
+
+  <form id="paygateForm" method="POST" action="https://secure.paygate.co.za/paypage">
+    <label>PAYGATE_ID
+      <input type="text" name="PAYGATE_ID" value="1051358100016" />
+    </label>
+    <label>REFERENCE
+      <input type="text" name="REFERENCE" value="TEST-123" />
+    </label>
+    <label>AMOUNT
+      <input type="text" name="AMOUNT" value="100" />
+    </label>
+    <label>CURRENCY
+      <input type="text" name="CURRENCY" value="ZAR" />
+    </label>
+    <label>RETURN_URL
+      <input type="text" name="RETURN_URL" value="https://capsaicin-frontend.vercel.app/paygate/return" />
+    </label>
+    <label>NOTIFY_URL
+      <input type="text" name="NOTIFY_URL" value="https://capsaicin-backend.onrender.com/paygate/notify" />
+    </label>
+    <label>DESCRIPTION
+      <input type="text" name="DESCRIPTION" value="test" />
+    </label>
+    <label>TIMESTAMP
+      <input type="text" name="TIMESTAMP" value="1757687784907" />
+    </label>
+    <label>SIGNATURE
+      <input type="text" name="SIGNATURE" value="6bda8f0aa112486e8be61f86e068f547bb01c151b3e429176e37189624f8192a" />
+    </label>
+    <label>SIGNATURE_METHOD
+      <input type="text" name="SIGNATURE_METHOD" value="HMAC-SHA256" />
+    </label>
+
+    <button type="submit">Submit to PayGate</button>
+    <button type="button" id="openWindow">Open in New Window and Submit</button>
+    <button type="button" id="callCreate">Call /paygate/create (fill form)</button>
+  </form>
+
+  <script>
+    const info = document.createElement('pre');
+    info.id = 'createResult';
+    info.style.whiteSpace = 'pre-wrap';
+    info.style.background = '#f6f8fa';
+    info.style.padding = '12px';
+    info.style.marginTop = '12px';
+    document.body.appendChild(info);
+
+    document.getElementById('openWindow').addEventListener('click', function(){
+      const win = window.open('about:blank', 'paygate_window');
+      document.getElementById('paygateForm').target = 'paygate_window';
+      document.getElementById('paygateForm').submit();
+    });
+
+    // Call backend /paygate/create and populate the form
+    document.getElementById('callCreate').addEventListener('click', async function(){
+      info.textContent = 'Calling /paygate/create...';
+      try {
+        const resp = await fetch('https://capsaicin-backend.onrender.com/paygate/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orderId: 'DEBUG-' + Date.now(), amountRands: 1, currency: 'ZAR', description: 'debug test' })
+        });
+
+        const text = await resp.text();
+        let json = null;
+        try { json = JSON.parse(text); } catch (e) { /* not JSON */ }
+        info.textContent = 'HTTP ' + resp.status + '\n\n' + text;
+
+        if (json && json.success && json.fields) {
+          const f = json.fields;
+          // populate existing inputs
+          const setIfPresent = (name, value) => {
+            const el = document.querySelector('[name="' + name + '"]');
+            if (el) el.value = value || '';
+            else {
+              // create hidden input if missing
+              const input = document.createElement('input');
+              input.type = 'hidden';
+              input.name = name;
+              input.value = value || '';
+              document.getElementById('paygateForm').appendChild(input);
+            }
+          }
+
+          Object.keys(f).forEach(k => setIfPresent(k, f[k]));
+          setIfPresent('SIGNATURE', json.signature || '');
+          setIfPresent('SIGNATURE_METHOD', json.signature_method || 'HMAC-SHA256');
+          info.textContent += '\n\nForm fields populated. You can now click "Open in New Window and Submit".';
+        }
+      } catch (err) {
+        info.textContent = 'Fetch error: ' + err.message;
+      }
+    });
+  </script>
+</body>
+</html>
