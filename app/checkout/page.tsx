@@ -43,86 +43,7 @@ export default function CheckoutPage() {
   const shippingLabel = shippingCost === 0 ? 'Free Shipping' : 'Shipping';
   const grandTotal = (Number(total || 0) + (shippingCost || 0)).toFixed(2);
 
-  // Proceed to PayGate: call backend /paygate/initiate (PayWeb3) and open PayGate process page
-  const proceedToPaygate = async () => {
-    try {
-      setIsProcessing(true);
-      const orderId = `INV-${Date.now().toString().slice(-6)}`; // temporary reference
-
-      // Open a blank window now to preserve the user gesture and avoid popup blockers.
-      // We'll submit the payment form into this window once we have the signed payload.
-      // Open a named window early to preserve the user gesture and avoid popup blockers.
-      // Use a fixed window name and do NOT read properties from the returned window
-      // (reading cross-origin properties like name can throw SecurityError).
-      const payWindowName = 'paygate_window';
-      let payWindow = null
-      try {
-        payWindow = window.open('', payWindowName)
-        if (!payWindow) {
-          alert('Popup blocked: please allow popups for this site to complete payment')
-        }
-      } catch (e) {
-        console.warn('Failed to open pay window early', e)
-      }
-
-      // Determine API base URL at runtime. Use NEXT_PUBLIC_API_URL when set.
-      // In local dev, detect browser hostname and route to backend at port 4000 to avoid hitting Next dev server port (3001).
-      let apiBase = '';
-      if (typeof window !== 'undefined') {
-        apiBase = (process.env.NEXT_PUBLIC_API_URL && String(process.env.NEXT_PUBLIC_API_URL).trim()) || (window.location.hostname === 'localhost' ? `http://${window.location.hostname}:4000` : '');
-      } else {
-        apiBase = (process.env.NEXT_PUBLIC_API_URL && String(process.env.NEXT_PUBLIC_API_URL).trim()) || '';
-      }
-      const endpointUrl = apiBase ? `${apiBase.replace(/\/$/, '')}/paygate/initiate` : '/paygate/initiate';
-      console.log('Calling PayGate initiate at', endpointUrl);
-
-      const res = await fetch(endpointUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderId, amountRands: Number(grandTotal), email: '' })
-      });
-
-      const text = await res.text();
-      let data: any = null;
-      try {
-        data = JSON.parse(text);
-      } catch (e) {
-        console.error('Non-JSON response from /paygate/initiate:', text);
-        alert('Unexpected response from payment server. Check backend URL and server logs.');
-        setIsProcessing(false);
-        return;
-      }
-
-      if (!data || !data.success || !data.processUrl || !data.fields) {
-        console.error('PayGate initiate failed', data);
-        setIsProcessing(false);
-        return;
-      }
-
-      // Build and submit form to PayWeb3 process.trans with PAY_REQUEST_ID and CHECKSUM
-      const form = document.createElement('form');
-      form.method = 'POST';
-      form.action = data.processUrl || 'https://secure.paygate.co.za/payweb3/process.trans';
-      form.target = payWindow ? payWindowName : '_blank';
-
-      // Append the required fields (PAY_REQUEST_ID + CHECKSUM)
-      for (const [k, v] of Object.entries(data.fields || {})) {
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = k;
-        input.value = String(v);
-        form.appendChild(input);
-      }
-
-  document.body.appendChild(form);
-  form.submit();
-  form.remove();
-  setIsProcessing(false);
-    } catch (err) {
-      console.error('Error creating PayGate payment', err);
-      setIsProcessing(false);
-    }
-  };
+  
 
   // Proceed to Ozow: call backend /ozow/initiate and auto-submit to https://pay.ozow.com
   const proceedToOzow = async () => {
@@ -233,9 +154,6 @@ export default function CheckoutPage() {
         </div>
 
         <div className="flex gap-4">
-          <Button onClick={proceedToPaygate} disabled={isProcessing} className="bg-orange-600 hover:bg-orange-700">
-            {isProcessing ? 'Processing...' : `Proceed to Pay with PayGate (R ${grandTotal})`}
-          </Button>
           <Button onClick={proceedToOzow} disabled={isProcessingOzow} className="bg-blue-600 hover:bg-blue-700">
             {isProcessingOzow ? 'Processing...' : `Pay with Ozow (R ${grandTotal})`}
           </Button>
