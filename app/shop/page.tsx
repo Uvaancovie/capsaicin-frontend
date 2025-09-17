@@ -35,6 +35,9 @@ const getProductId = (product: Product): string => {
 export default function ShopPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [query, setQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [categories, setCategories] = useState<string[]>([]);
   const [quantities, setQuantities] = useState<{ [key: string]: number }>({});
   const { addItem } = useCart()
   const { toast } = useToast()
@@ -70,6 +73,27 @@ export default function ShopPage() {
 
     fetchProducts();
   }, [toast]);
+
+  useEffect(() => {
+    // derive categories from products
+    const cats = Array.from(new Set(products.map(p => p.category).filter(Boolean)));
+    setCategories(cats);
+    // reset selected category if it's no longer available
+    if (selectedCategory !== 'All' && !cats.includes(selectedCategory)) {
+      setSelectedCategory('All');
+    }
+  }, [products, selectedCategory]);
+
+  const filteredProducts = products.filter((p) => {
+    const q = query.trim().toLowerCase();
+    if (selectedCategory && selectedCategory !== 'All' && p.category !== selectedCategory) return false;
+    if (!q) return true;
+    return (
+      (p.name || '').toLowerCase().includes(q) ||
+      (p.description || '').toLowerCase().includes(q) ||
+      (p.category || '').toLowerCase().includes(q)
+    );
+  });
 
   const updateQuantity = (productId: string, change: number) => {
     setQuantities(prev => ({
@@ -115,14 +139,38 @@ export default function ShopPage() {
           <p className="text-xl text-gray-600">Quality healthcare products from Cape Pharm</p>
         </div>
 
-        {products.length === 0 ? (
+        <div className="mb-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="flex items-center space-x-2 w-full md:w-1/2">
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search products, descriptions..."
+              className="w-full border rounded-lg px-3 py-2 shadow-sm"
+            />
+          </div>
+
+          <div className="flex items-center space-x-2 w-full md:w-auto">
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="border rounded-lg px-3 py-2"
+            >
+              <option value="All">All Categories</option>
+              {categories.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {filteredProducts.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-gray-500 text-lg">No products available at the moment.</p>
             <p className="text-gray-400 mt-2">Please check back later or contact us for more information.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {products.map((product) => (
+            {filteredProducts.map((product) => (
               <Card key={getProductId(product)} className="overflow-hidden hover:shadow-lg transition-shadow">
                 <div className="aspect-square relative bg-gray-100">
                   {product.image_url ? (
