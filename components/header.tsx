@@ -48,7 +48,7 @@ export function Header() {
           </nav>
 
           <div className="flex items-center space-x-4">
-            {user ? (
+            {user && (
               <>
                 <span className="hidden md:block text-sm text-gray-600">
                   Welcome, {user.email}
@@ -58,13 +58,6 @@ export function Header() {
                   Logout
                 </Button>
               </>
-            ) : (
-              <Link href="/login">
-                <Button variant="ghost" size="sm">
-                  <User className="w-4 h-4 mr-2" />
-                  Login
-                </Button>
-              </Link>
             )}
             <Link href="/admin" className="hidden md:block">
               <Button variant="ghost" size="sm">
