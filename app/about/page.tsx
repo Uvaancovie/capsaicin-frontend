@@ -117,68 +117,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Team Section */}
-      <section className="py-16 px-4 bg-gray-50">
-        <div className="container mx-auto max-w-6xl">
-          <h2 className="text-3xl font-bold text-center mb-12 text-gray-900">Meet Our Team</h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            <Card className="text-center border-0 shadow-lg">
-              <CardContent className="p-6">
-                <div className="w-24 h-24 bg-gray-200 rounded-full mx-auto mb-4">
-                  <Image
-                    src="/placeholder.svg?height=96&width=96"
-                    alt="Team Member"
-                    width={96}
-                    height={96}
-                    className="rounded-full"
-                  />
-                </div>
-                <h3 className="text-xl font-bold mb-2">Dr. Sarah Johnson</h3>
-                <p className="text-red-600 font-semibold mb-2">Founder & CEO</p>
-                <p className="text-gray-600 text-sm">
-                  Passionate about natural healing with 15 years in pharmaceutical development.
-                </p>
-              </CardContent>
-            </Card>
-            <Card className="text-center border-0 shadow-lg">
-              <CardContent className="p-6">
-                <div className="w-24 h-24 bg-gray-200 rounded-full mx-auto mb-4">
-                  <Image
-                    src="/placeholder.svg?height=96&width=96"
-                    alt="Team Member"
-                    width={96}
-                    height={96}
-                    className="rounded-full"
-                  />
-                </div>
-                <h3 className="text-xl font-bold mb-2">Michael Chen</h3>
-                <p className="text-red-600 font-semibold mb-2">Head of Quality</p>
-                <p className="text-gray-600 text-sm">
-                  Ensures every product meets our rigorous quality and safety standards.
-                </p>
-              </CardContent>
-            </Card>
-            <Card className="text-center border-0 shadow-lg">
-              <CardContent className="p-6">
-                <div className="w-24 h-24 bg-gray-200 rounded-full mx-auto mb-4">
-                  <Image
-                    src="/placeholder.svg?height=96&width=96"
-                    alt="Team Member"
-                    width={96}
-                    height={96}
-                    className="rounded-full"
-                  />
-                </div>
-                <h3 className="text-xl font-bold mb-2">Lisa Patel</h3>
-                <p className="text-red-600 font-semibold mb-2">Customer Care</p>
-                <p className="text-gray-600 text-sm">
-                  Dedicated to ensuring every customer has an exceptional experience.
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
+
 
       {/* CTA Section */}
       <section className="py-16 px-4 bg-red-600 text-white">
