@@ -22,7 +22,7 @@ export default function HomePage() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button size="lg" className="bg-white text-red-600 hover:bg-gray-100 font-semibold">
-                  <Link href="/shop">Buy Now - R169.99</Link>
+                  <Link href="/shop">Buy Now - R130.00</Link>
                 </Button>
                 <Button
                   size="lg"
