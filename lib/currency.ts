@@ -83,7 +83,7 @@ export const calculateShipping = (cartTotal: number, selectedShipping: string): 
   const shipping = shippingOptions.find(option => option.id === selectedShipping);
   
   if (!shipping) {
-    return shippingOptions[0].price; // Default to standard
+    return 100.00; // Default to flat R100
   }
   
   // Free shipping on orders over R500

@@ -112,7 +112,8 @@ function cartReducer(state: CartState, action: CartAction): CartState {
       }
     }
     case "SET_SHIPPING": {
-      const shippingCost = hasTestProduct(state.items) ? 0 : calculateShipping(state.total, action.payload)
+      // enforce a flat R100 shipping unless the cart has a test product
+      const shippingCost = hasTestProduct(state.items) ? 0 : 100.00
       return {
         ...state,
         selectedShipping: action.payload,
@@ -125,7 +126,7 @@ function cartReducer(state: CartState, action: CartAction): CartState {
         items: [], 
         total: 0, 
         selectedShipping: 'standard',
-        shippingCost: 99.00,
+        shippingCost: 100.00,
         finalTotal: 0
       }
     }

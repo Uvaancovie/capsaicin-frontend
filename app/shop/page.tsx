@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge"
 import { Shield, Truck, Heart, Plus, Minus } from "lucide-react"
 import Image from "next/image"
 import { useState, useEffect } from "react"
+import Link from 'next/link'
+import { formatZAR } from '@/lib/currency'
 import { useCart } from "@/components/cart-provider"
 import { useToast } from "@/hooks/use-toast"
 import { api } from "@/lib/api"
@@ -22,11 +24,8 @@ interface Product {
   created_at?: string;
 }
 
-// Helper function to safely format price
-const formatPrice = (price: any): string => {
-  const numPrice = Number(price) || 0;
-  return numPrice.toFixed(2);
-};
+// Helper: map to formatZAR
+const formatPrice = (price: any): string => formatZAR(Number(price) || 0);
 
 // Helper function to get product ID consistently
 const getProductId = (product: Product): string => {
@@ -161,7 +160,7 @@ export default function ShopPage() {
 
                   <div className="mb-4">
                     <span className="text-3xl font-bold text-red-600">
-                      ${formatPrice(product.price)}
+                      {formatPrice(product.price)}
                     </span>
                     {product.category && (
                       <Badge variant="secondary" className="ml-2">
@@ -192,7 +191,11 @@ export default function ShopPage() {
                     </div>
                   </div>
 
-                  <Button 
+                    <div className="space-y-3">
+                      <Link href={`/shop/${getProductId(product)}`} className="text-sm text-blue-600 hover:underline">View details</Link>
+                    </div>
+
+                    <Button 
                     className="w-full bg-red-600 hover:bg-red-700"
                     onClick={() => handleAddToCart(product)}
                     disabled={product.stock_quantity === 0}
@@ -200,7 +203,7 @@ export default function ShopPage() {
                     {product.stock_quantity === 0 ? (
                       "Out of Stock"
                     ) : (
-                      `Add to Cart - $${formatPrice(Number(product.price) * (quantities[getProductId(product)] || 1))}`
+                      `Add to Cart - ${formatPrice(Number(product.price) * (quantities[getProductId(product)] || 1))}`
                     )}
                   </Button>
                 </CardContent>
