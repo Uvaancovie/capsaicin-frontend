@@ -81,7 +81,7 @@ export function Footer() {
             <div className="space-y-3 text-gray-400">
               <div className="flex items-center space-x-2">
                 <Mail className="w-4 h-4" />
-                <span>info@capepharm.co.za</span>
+                <span>circlepp@mweb.co.za</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Clock className="w-4 h-4" />
