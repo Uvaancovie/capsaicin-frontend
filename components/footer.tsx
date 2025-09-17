@@ -9,13 +9,13 @@ export function Footer() {
           <div>
             <div className="flex items-center space-x-2 mb-4">
               <div className="w-8 h-8 bg-red-600 rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-sm">CR</span>
+                <span className="text-white font-bold text-sm">CP</span>
               </div>
-              <span className="font-bold text-xl">Capsaicin Relief</span>
+              <span className="font-bold text-xl">Cape Pharm</span>
             </div>
-            <p className="text-gray-400 mb-4">Natural Pain Relief Powered by Science</p>
+            <p className="text-gray-400 mb-4">Quality Healthcare & Pharmacy Services</p>
             <div className="flex space-x-4">
-              <Link href="https://instagram.com/capsaicinrelief" className="text-gray-400 hover:text-red-600">
+              <Link href="https://instagram.com/capepharm" className="text-gray-400 hover:text-red-600">
                 <Instagram className="w-5 h-5" />
               </Link>
               <Link href="#" className="text-gray-400 hover:text-red-600">
@@ -81,7 +81,7 @@ export function Footer() {
             <div className="space-y-3 text-gray-400">
               <div className="flex items-center space-x-2">
                 <Mail className="w-4 h-4" />
-                <span>info@capsaicinrelief.co.za</span>
+                <span>info@capepharm.co.za</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Clock className="w-4 h-4" />
@@ -96,7 +96,7 @@ export function Footer() {
         </div>
 
         <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-          <p>&copy; {new Date().getFullYear()} Capsaicin Relief. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} Cape Pharm. All rights reserved.</p>
         </div>
       </div>
     </footer>

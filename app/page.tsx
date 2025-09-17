@@ -13,12 +13,12 @@ export default function HomePage() {
         <div className="container mx-auto max-w-6xl">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
-              <Badge className="bg-white text-red-600 hover:bg-gray-100">Fast-Acting Heat Therapy</Badge>
-              <h1 className="text-4xl lg:text-6xl font-bold leading-tight">Capsaicin Relief</h1>
-              <p className="text-xl lg:text-2xl font-medium opacity-90">Fast-Acting Heat Therapy in a Tube</p>
+              <Badge className="bg-white text-red-600 hover:bg-gray-100">Your Trusted Pharmacy</Badge>
+              <h1 className="text-4xl lg:text-6xl font-bold leading-tight">Cape Pharm</h1>
+              <p className="text-xl lg:text-2xl font-medium opacity-90">Quality Healthcare Products & Pharmacy Services</p>
               <p className="text-lg opacity-80 max-w-md">
-                Premium chilli seed extract cream for natural joint and muscle pain relief. Targeted heat therapy that
-                works where you need it most.
+                Your trusted source for premium healthcare products, medications, and wellness solutions. 
+                Professional pharmacy services with a focus on your health and well-being.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button size="lg" className="bg-white text-red-600 hover:bg-gray-100 font-semibold">
@@ -36,7 +36,7 @@ export default function HomePage() {
             <div className="relative">
               <Image
               src="/logo.jpg"
-              alt="Capsaicin Relief Cream"
+              alt="Cape Pharm Products"
               width={400}
               height={500}
               className="mx-auto rounded-lg shadow-2xl"
@@ -49,14 +49,14 @@ export default function HomePage() {
       {/* Benefits Grid */}
       <section className="py-16 px-4 bg-gray-50">
         <div className="container mx-auto max-w-6xl">
-          <h2 className="text-3xl font-bold text-center mb-12 text-gray-900">Why Choose Capsaicin Relief?</h2>
+          <h2 className="text-3xl font-bold text-center mb-12 text-gray-900">Why Choose Cape Pharm?</h2>
           <div className="grid md:grid-cols-3 gap-8">
             <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
               <CardContent className="p-6 text-center">
                 <Zap className="w-12 h-12 text-red-600 mx-auto mb-4" />
-                <h3 className="text-xl font-bold mb-2">Fast Relief</h3>
+                <h3 className="text-xl font-bold mb-2">Quality Products</h3>
                 <p className="text-gray-600">
-                  Feel the warming relief within minutes of application. Targeted heat therapy that works quickly.
+                  Premium healthcare products backed by quality assurance and professional standards.
                 </p>
               </CardContent>
             </Card>
@@ -65,16 +65,16 @@ export default function HomePage() {
                 <Leaf className="w-12 h-12 text-red-600 mx-auto mb-4" />
                 <h3 className="text-xl font-bold mb-2">Natural Ingredients</h3>
                 <p className="text-gray-600">
-                  Made with premium capsaicin extract and natural anti-inflammatory agents. No harsh chemicals.
+                  Made with premium natural ingredients and pharmaceutical-grade compounds. Safe and effective.
                 </p>
               </CardContent>
             </Card>
             <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
               <CardContent className="p-6 text-center">
                 <Heart className="w-12 h-12 text-red-600 mx-auto mb-4" />
-                <h3 className="text-xl font-bold mb-2">Non-Greasy Formula</h3>
+                <h3 className="text-xl font-bold mb-2">Professional Service</h3>
                 <p className="text-gray-600">
-                  Absorbs quickly without leaving residue. Perfect for active lifestyles and daily use.
+                  Expert pharmacy consultation and personalized healthcare advice for your wellness needs.
                 </p>
               </CardContent>
             </Card>
@@ -142,8 +142,8 @@ export default function HomePage() {
       {/* CTA Section */}
       <section className="py-16 px-4 bg-red-600 text-white">
         <div className="container mx-auto max-w-4xl text-center">
-          <h2 className="text-3xl font-bold mb-4">Ready to Experience Natural Pain Relief?</h2>
-          <p className="text-xl mb-8 opacity-90">Join thousands of satisfied customers who trust Capsaicin Relief</p>
+          <h2 className="text-3xl font-bold mb-4">Ready to Experience Quality Healthcare?</h2>
+          <p className="text-xl mb-8 opacity-90">Join thousands of satisfied customers who trust Cape Pharm</p>
           <Button size="lg" className="bg-white text-red-600 hover:bg-gray-100 font-semibold">
             <Link href="/shop">Order Now - R169.99</Link>
           </Button>

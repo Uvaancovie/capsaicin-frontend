@@ -46,7 +46,7 @@ export function AuthForm() {
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardHeader>
-        <CardTitle>Welcome to Capsaicin</CardTitle>
+        <CardTitle>Welcome to Cape Pharm</CardTitle>
         <CardDescription>Sign in to your account or create a new one</CardDescription>
       </CardHeader>
       <CardContent>

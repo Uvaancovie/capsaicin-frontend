@@ -105,7 +105,7 @@ export default function ContactPage() {
                   <Mail className="w-5 h-5 text-red-600 mt-1" />
                   <div>
                     <p className="font-semibold">Email</p>
-                    <p className="text-gray-600">info@capsaicinrelief.co.za</p>
+                    <p className="text-gray-600">info@capepharm.co.za</p>
                   </div>
                 </div>
                 <div className="flex items-start space-x-3">
@@ -133,13 +133,13 @@ export default function ContactPage() {
               <CardContent>
                 <div className="flex space-x-4">
                   <a
-                    href="https://instagram.com/capsaicinrelief"
+                    href="https://instagram.com/capepharm"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center space-x-2 text-gray-600 hover:text-red-600 transition-colors"
                   >
                     <Instagram className="w-5 h-5" />
-                    <span>@capsaicinrelief</span>
+                    <span>@capepharm</span>
                   </a>
                   <a
                     href="#"
@@ -148,7 +148,7 @@ export default function ContactPage() {
                     className="flex items-center space-x-2 text-gray-600 hover:text-red-600 transition-colors"
                   >
                     <Facebook className="w-5 h-5" />
-                    <span>Capsaicin Relief</span>
+                    <span>Cape Pharm</span>
                   </a>
                 </div>
               </CardContent>

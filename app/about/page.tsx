@@ -10,11 +10,10 @@ export default function AboutPage() {
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-red-50 to-red-100 py-16 px-4">
         <div className="container mx-auto max-w-4xl text-center">
-          <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-6">About Capsaicin Relief</h1>
-          <p className="text-xl text-gray-600 mb-8">Natural Pain Relief Powered by Science</p>
+          <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-6">About Cape Pharm</h1>
+          <p className="text-xl text-gray-600 mb-8">Quality Healthcare & Pharmacy Services</p>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            We're passionate about providing natural, effective pain relief solutions that help people live more
-            comfortable, active lives.
+            We're passionate about providing quality healthcare products and professional pharmacy services that help people live healthier, more comfortable lives.
           </p>
         </div>
       </section>
@@ -27,17 +26,17 @@ export default function AboutPage() {
               <h2 className="text-3xl font-bold mb-6 text-gray-900">Our Story</h2>
               <div className="space-y-4 text-gray-600 leading-relaxed">
                 <p>
-                  Capsaicin Relief was born from a simple belief: natural pain relief shouldn't be complicated or
-                  compromise on effectiveness. Our journey began when our founder experienced chronic joint pain and
-                  discovered the remarkable healing properties of capsaicin.
+                  Cape Pharm was born from a simple belief: quality healthcare should be accessible and professional.
+                  Our journey began with a commitment to providing South Africans with trusted pharmacy services and
+                  premium healthcare products.
                 </p>
                 <p>
-                  Partnering with Eden Formulas, a trusted South African pharmaceutical company, we developed a premium
-                  capsaicin cream that combines traditional natural healing with modern scientific formulation.
+                  Partnering with leading pharmaceutical companies, we offer a comprehensive range of healthcare
+                  solutions that combine traditional care with modern pharmaceutical standards.
                 </p>
                 <p>
-                  Today, we're proud to offer a locally-made solution that helps thousands of South Africans manage
-                  their pain naturally and effectively.
+                  Today, we're proud to serve our community with professional pharmacy services and quality products
+                  that help people live healthier lives.
                 </p>
               </div>
             </div>

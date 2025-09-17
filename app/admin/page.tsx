@@ -184,8 +184,8 @@ export default function AdminDashboard() {
 </head>
 <body>
     <div class="header">
-        <div class="company-name">CAPSAICIN RELIEF</div>
-        <div>Premium Pain Relief Products</div>
+        <div class="company-name">CAPE PHARM</div>
+        <div>Quality Healthcare Products</div>
     </div>
 
     <div class="invoice-details">
@@ -241,7 +241,7 @@ export default function AdminDashboard() {
 
     <div class="footer">
         <p>Thank you for your business!</p>
-        <p>Contact us: info@capsaicinrelief.com | +27 (0)11 123 4567</p>
+        <p>Contact us: info@capepharm.co.za | +27 (0)11 123 4567</p>
         <p>This is a computer-generated invoice.</p>
     </div>
 </body>

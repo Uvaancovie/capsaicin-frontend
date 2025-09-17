@@ -12,9 +12,9 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 const montserrat = Montserrat({ subsets: ["latin"], variable: "--font-montserrat" })
 
 export const metadata: Metadata = {
-  title: "Capsaicin Relief - Fast-Acting Heat Therapy",
+  title: "Cape Pharm - Your Trusted Pharmacy",
   description:
-    "Premium chilli seed extract cream for natural joint and muscle pain relief. Fast-acting heat therapy in a tube.",
+    "Quality healthcare products and professional pharmacy services. Your trusted source for medications, wellness products, and expert healthcare advice.",
     generator: 'v0.dev'
 }
 
