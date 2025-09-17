@@ -105,7 +105,7 @@ export default function ContactPage() {
                   <Mail className="w-5 h-5 text-red-600 mt-1" />
                   <div>
                     <p className="font-semibold">Email</p>
-                    <p className="text-gray-600">info@capepharm.co.za</p>
+                    <p className="text-gray-600">circlepp@mweb.co.za</p>
                   </div>
                 </div>
                 <div className="flex items-start space-x-3">
@@ -166,12 +166,7 @@ export default function ContactPage() {
                     Africa.
                   </p>
                 </div>
-                <div>
-                  <p className="font-semibold mb-1">Is there a money-back guarantee?</p>
-                  <p className="text-gray-600 text-sm">
-                    Yes! We offer a 30-day money-back guarantee if you're not completely satisfied.
-                  </p>
-                </div>
+                
                 <div>
                   <p className="font-semibold mb-1">How often can I use the cream?</p>
                   <p className="text-gray-600 text-sm">
