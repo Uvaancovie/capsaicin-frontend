@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useCart } from '@/components/cart-provider';
+import { api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
@@ -45,11 +46,18 @@ export default function CheckoutPage() {
 
   
 
+  const [customerName, setCustomerName] = useState('');
+  const [customerEmail, setCustomerEmail] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
+  const [customerAddress, setCustomerAddress] = useState('');
+  const [shippingMethod, setShippingMethod] = useState(selectedShipping || 'standard');
+  const [notes, setNotes] = useState('');
+
   // Proceed to Ozow: call backend /ozow/initiate and auto-submit to https://pay.ozow.com
-  const proceedToOzow = async () => {
+  const proceedToOzow = async (orderId: string, amountRands: number, customerString = '') => {
     try {
       setIsProcessingOzow(true);
-      const orderId = `INV-${Date.now().toString().slice(-6)}`;
+  // orderId is passed in
 
       // Open named window early to preserve user gesture
       const payWindowName = 'ozow_window';
@@ -74,7 +82,7 @@ export default function CheckoutPage() {
       const res = await fetch(endpointUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderId, amountRands: Number(grandTotal), bankRef: orderId, customer: '' })
+        body: JSON.stringify({ orderId, amountRands: Number(amountRands), bankRef: orderId, customer: customerString })
       });
 
       const text = await res.text();
@@ -118,6 +126,68 @@ export default function CheckoutPage() {
     }
   };
 
+  // Submit checkout: create invoice then initiate Ozow
+  const handleSubmit = async (e: any) => {
+    e.preventDefault();
+    if (!customerName || !customerEmail || !customerAddress) {
+      alert('Please provide your name, email and shipping address');
+      return;
+    }
+
+    try {
+      setIsProcessing(true);
+
+      // Build invoice items
+      const invoiceItems = items.map((it: any) => ({
+        name: it.name,
+        quantity: it.quantity,
+        price: it.price,
+        total: Number((it.price * it.quantity).toFixed(2))
+      }));
+
+      const invoicePayload = {
+        customer_name: customerName,
+        customer_email: customerEmail,
+        customer_phone: customerPhone || '',
+        customer_address: customerAddress,
+        items: invoiceItems,
+        subtotal: Number(Number(total || 0).toFixed(2)),
+        shipping_cost: Number((shippingCost || 0).toFixed(2)),
+        total: Number((Number(total || 0) + (shippingCost || 0)).toFixed(2)),
+        shipping_method: shippingMethod,
+        notes: notes || ''
+      };
+
+      // Create invoice on backend
+      const created = await api.createInvoice(invoicePayload);
+      if (!created || !created.invoice) {
+        throw new Error('Invoice creation failed');
+      }
+
+      const invoiceNumber = created.invoice.invoice_number || created.invoice_number || '';
+      if (!invoiceNumber) throw new Error('Invoice number missing from response');
+
+      // Store initiation payload in sessionStorage for the processing page to pick up
+      try {
+        const key = `ozow:init:${invoiceNumber}`;
+        const payload = { amount: invoicePayload.total, customer: `${customerName} <${customerEmail}>` };
+        if (typeof window !== 'undefined' && window.sessionStorage) {
+          window.sessionStorage.setItem(key, JSON.stringify(payload));
+        }
+      } catch (e) {
+        console.warn('Failed to save ozow init payload in sessionStorage', e);
+      }
+
+      setIsProcessing(false);
+      // Immediately navigate to processing page which will initiate payment and poll status
+      router.push(`/order/processing?ref=${encodeURIComponent(invoiceNumber)}`);
+    } catch (err: any) {
+      console.error('Checkout submit error', err);
+      alert(err && err.message ? err.message : 'Checkout failed');
+      setIsProcessing(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4">
       <div className="max-w-3xl mx-auto">
@@ -153,12 +223,27 @@ export default function CheckoutPage() {
           <p className="text-sm text-gray-600">Shipping: {shippingLabel} — no charge applied.</p>
         </div>
 
-        <div className="flex gap-4">
-          <Button onClick={proceedToOzow} disabled={isProcessingOzow} className="bg-blue-600 hover:bg-blue-700">
-            {isProcessingOzow ? 'Processing...' : `Pay with Ozow (R ${grandTotal})`}
-          </Button>
-          <Button variant="ghost" onClick={() => router.push('/shop')}>Continue Shopping</Button>
-        </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 gap-4">
+            <input value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder="Full name" className="w-full px-3 py-2 border rounded" />
+            <input value={customerEmail} onChange={(e) => setCustomerEmail(e.target.value)} placeholder="Email address" type="email" className="w-full px-3 py-2 border rounded" />
+            <input value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} placeholder="Phone (optional)" className="w-full px-3 py-2 border rounded" />
+            <textarea value={customerAddress} onChange={(e) => setCustomerAddress(e.target.value)} placeholder="Shipping address" className="w-full px-3 py-2 border rounded" rows={3} />
+            <select value={shippingMethod} onChange={(e) => setShippingMethod(e.target.value)} className="w-full px-3 py-2 border rounded">
+              <option value="standard">Standard Delivery</option>
+              <option value="express">Express Delivery</option>
+              <option value="free">Free Pickup</option>
+            </select>
+            <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Order notes (optional)" className="w-full px-3 py-2 border rounded" rows={2} />
+          </div>
+
+          <div className="flex gap-4">
+            <Button type="submit" disabled={isProcessing || isProcessingOzow} className="bg-blue-600 hover:bg-blue-700">
+              {isProcessing ? 'Creating order...' : `Pay with Ozow (R ${grandTotal})`}
+            </Button>
+            <Button variant="ghost" onClick={() => router.push('/shop')}>Continue Shopping</Button>
+          </div>
+        </form>
       </div>
     </div>
   );
