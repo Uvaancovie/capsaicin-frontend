@@ -38,55 +38,57 @@ export default function CartPage() {
             {items.map((item) => (
               <Card key={item.id}>
                 <CardContent className="p-6">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-20 h-20 rounded-lg overflow-hidden bg-gray-100">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4">
+                    <div className="w-full sm:w-20 sm:h-20 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
                       <Image
                         src={item.image || "/placeholder.svg"}
                         alt={item.name}
-                        width={80}
-                        height={80}
+                        width={160}
+                        height={160}
                         className="w-full h-full object-cover"
                       />
                     </div>
 
-                    <div className="flex-1">
+                    <div className="flex-1 mt-3 sm:mt-0">
                       <h3 className="font-semibold text-gray-900">{item.name}</h3>
                       <p className="text-red-600 font-bold">{formatZAR(item.price)}</p>
+
+                      <div className="mt-3 sm:mt-2 flex items-center sm:justify-start space-x-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                          disabled={item.quantity <= 1}
+                        >
+                          <Minus className="w-4 h-4" />
+                        </Button>
+                        <span className="w-10 text-center font-semibold">{item.quantity}</span>
+                        <Button variant="outline" size="sm" onClick={() => updateQuantity(item.id, item.quantity + 1)}>
+                          <Plus className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
 
-                    <div className="flex items-center space-x-2">
+                    <div className="mt-3 sm:mt-0 ml-auto flex items-center space-x-2">
                       <Button
-                        variant="outline"
+                        variant="ghost"
                         size="sm"
-                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                        disabled={item.quantity <= 1}
+                        onClick={() => removeItem(item.id)}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
                       >
-                        <Minus className="w-4 h-4" />
-                      </Button>
-                      <span className="w-8 text-center font-semibold">{item.quantity}</span>
-                      <Button variant="outline" size="sm" onClick={() => updateQuantity(item.id, item.quantity + 1)}>
-                        <Plus className="w-4 h-4" />
+                        <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
-
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeItem(item.id)}
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
                   </div>
                 </CardContent>
               </Card>
             ))}
 
-            <div className="flex justify-between items-center pt-4">
-              <Button variant="outline" onClick={clearCart}>
+            <div className="flex flex-col sm:flex-row justify-between items-center pt-4 gap-2">
+              <Button variant="outline" onClick={clearCart} className="w-full sm:w-auto">
                 Clear Cart
               </Button>
-              <Button variant="outline" asChild>
+              <Button variant="outline" asChild className="w-full sm:w-auto">
                 <Link href="/shop">Continue Shopping</Link>
               </Button>
             </div>
@@ -94,7 +96,7 @@ export default function CartPage() {
 
           {/* Order Summary */}
           <div>
-            <Card>
+            <Card className="lg:sticky lg:top-20">
               <CardHeader>
                 <CardTitle>Order Summary</CardTitle>
               </CardHeader>
