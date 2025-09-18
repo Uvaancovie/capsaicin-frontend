@@ -125,7 +125,7 @@ export default function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
             <div className="flex items-center justify-center space-x-2">
               <Shield className="w-6 h-6 text-red-600" />
-              <span className="font-semibold">Money-Back Guarantee</span>
+              <span className="font-semibold">Awesome new product </span>
             </div>
             <div className="flex items-center justify-center space-x-2">
               <Truck className="w-6 h-6 text-red-600" />
@@ -143,12 +143,16 @@ export default function HomePage() {
       <section className="py-16 px-4 bg-red-600 text-white">
         <div className="container mx-auto max-w-4xl text-center">
           <h2 className="text-3xl font-bold mb-4">Ready to Experience Quality Healthcare?</h2>
-          <p className="text-xl mb-8 opacity-90">Join thousands of satisfied customers who trust Cape Pharm</p>
+          <p className="text-xl mb-8 opacity-90">Join thousands of satisfied customers who trust Cape Pharm with over 20 Years Of Experience </p>
           <Button size="lg" className="bg-white text-red-600 hover:bg-gray-100 font-semibold">
-            <Link href="/shop">Order Now - R169.99</Link>
+            <Link href="/shop">Order Now With The Special Price - R130.00</Link>
           </Button>
         </div>
       </section>
     </div>
   )
 }
+
+
+//i changed the price from R169.99 to R130.00
+//the price and also the landing page to make sure that everything is consistent with the new pricing
