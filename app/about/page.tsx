@@ -42,7 +42,7 @@ export default function AboutPage() {
             </div>
             <div className="relative">
               <Image
-                src="/placeholder.svg?height=400&width=500"
+                src="https://media.licdn.com/dms/image/v2/D4E22AQHU8rpnkVO4PA/feedshare-shrink_2048_1536/feedshare-shrink_2048_1536/0/1691398067640?e=2147483647&v=beta&t=P53Mqa9IGj-ZmSOEr9XX9YhwG5oCL5kIrT4xtycBw4M"
                 alt="Our Story"
                 width={500}
                 height={400}
@@ -100,22 +100,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Our Mission */}
-      <section className="py-16 px-4">
-        <div className="container mx-auto max-w-4xl text-center">
-          <h2 className="text-3xl font-bold mb-6 text-gray-900">Our Mission</h2>
-          <div className="bg-red-50 p-8 rounded-lg">
-            <p className="text-xl text-gray-700 leading-relaxed mb-6">
-              "To provide natural, effective pain relief solutions that empower people to live more active, comfortable
-              lives while supporting local innovation and sustainable practices."
-            </p>
-            <p className="text-gray-600">
-              We're not just selling a product – we're providing a pathway to better quality of life through natural
-              healing.
-            </p>
-          </div>
-        </div>
-      </section>
+      
 
 
 
