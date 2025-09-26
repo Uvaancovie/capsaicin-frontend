@@ -3,6 +3,9 @@
 # Backend - exclude from frontend repo
 /backend/
 
+# Avoid committing uploaded files
+/backend/uploads/
+
 # dependencies
 /node_modules
 
