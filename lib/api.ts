@@ -82,9 +82,14 @@ export const api = {
         throw new Error(`HTTP ${response.status}: Failed to fetch products`);
       }
       
-      const data = await response.json();
-      console.log(`Products fetched: ${data.length} items (Cache: ${response.headers.get('X-Cache') || 'N/A'})`);
-      return data;
+  const data = await response.json();
+  // Support both legacy array response and new paginated { page, limit, items } shape
+  let items: any[] = [];
+  if (Array.isArray(data)) items = data;
+  else if (data && Array.isArray((data as any).items)) items = (data as any).items;
+  else items = [];
+  console.log(`Products fetched: ${items.length} items (Cache: ${response.headers.get('X-Cache') || 'N/A'})`);
+  return items;
     } catch (error) {
       console.error('Error fetching products:', error);
       throw error;
