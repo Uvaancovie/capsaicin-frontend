@@ -21,8 +21,7 @@ export function Header() {
     { name: "Shop", href: "/shop" },
     { name: "Jewellery", href: "/jewellery" },
     { name: "Blog", href: "/blog" },
-    { name: "Advice", href: "/advice" },
-    { name: "Videos", href: "/videos" },
+    // Advice and Videos removed per request - merged into Blog
     { name: "About Us", href: "/about" },
     { name: "Contact", href: "/contact" },
   ]

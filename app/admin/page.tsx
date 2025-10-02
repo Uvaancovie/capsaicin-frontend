@@ -374,9 +374,7 @@ export default function AdminDashboard() {
             <TabsTrigger value="invoices">Invoices & Orders</TabsTrigger>
             <TabsTrigger value="products">Product Management</TabsTrigger>
             <TabsTrigger value="jewellery">Jewellery Management</TabsTrigger>
-            <TabsTrigger value="blog">Blog CMS</TabsTrigger>
-            <TabsTrigger value="advice">Advice CMS</TabsTrigger>
-            <TabsTrigger value="videos">Videos CMS</TabsTrigger>
+            <TabsTrigger value="blog">Blog & Advice CMS</TabsTrigger>
           </TabsList>
 
           <TabsContent value="invoices">
@@ -556,12 +554,6 @@ export default function AdminDashboard() {
           </TabsContent>
           <TabsContent value="blog">
             <AdminCMSManager resource={'blog'} />
-          </TabsContent>
-          <TabsContent value="advice">
-            <AdminCMSManager resource={'advice'} />
-          </TabsContent>
-          <TabsContent value="videos">
-            <AdminCMSManager resource={'videos'} />
           </TabsContent>
         </Tabs>
       </div>
