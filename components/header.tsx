@@ -19,6 +19,10 @@ export function Header() {
     { name: "Home", href: "/" },
     { name: "How It Works", href: "/how-it-works" },
     { name: "Shop", href: "/shop" },
+    { name: "Jewellery", href: "/jewellery" },
+    { name: "Blog", href: "/blog" },
+    { name: "Advice", href: "/advice" },
+    { name: "Videos", href: "/videos" },
     { name: "About Us", href: "/about" },
     { name: "Contact", href: "/contact" },
   ]

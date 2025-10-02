@@ -67,7 +67,7 @@ export const api = {
   },
 
   // Products endpoints with optimized error handling
-  getProducts: async () => {
+  getProducts: async (category?: string) => {
     try {
       // First try to wake up the backend if it's sleeping
       try {
@@ -76,7 +76,8 @@ export const api = {
         console.log('Backend may be sleeping, continuing with products request...');
       }
       
-      const response = await fetchWithTimeout(`${API_BASE_URL}/products`);
+  const url = category ? `${API_BASE_URL}/products?category=${encodeURIComponent(category)}` : `${API_BASE_URL}/products`;
+  const response = await fetchWithTimeout(url);
       
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: Failed to fetch products`);
@@ -105,10 +106,22 @@ export const api = {
     image_url: string;
   }) => {
     try {
-      const response = await fetchWithTimeout(`${API_BASE_URL}/products`, {
-        method: 'POST',
-        body: JSON.stringify(productData),
-      });
+      let options: RequestInit = { method: 'POST' };
+      // If productData contains a File in the image_url field (from form), send multipart/form-data
+      if ((productData as any).imageFile instanceof File) {
+        const fd = new FormData();
+        fd.append('name', (productData as any).name || '');
+        fd.append('description', (productData as any).description || '');
+        fd.append('price', String((productData as any).price || '0'));
+        fd.append('stock_quantity', String((productData as any).stock_quantity || '0'));
+        fd.append('category', (productData as any).category || '');
+        fd.append('image', (productData as any).imageFile);
+        options.body = fd as unknown as BodyInit;
+      } else {
+        options.body = JSON.stringify(productData);
+        options.headers = { 'Content-Type': 'application/json' };
+      }
+      const response = await fetchWithTimeout(`${API_BASE_URL}/products`, options);
       
       if (!response.ok) {
         const error = await response.json();
@@ -126,10 +139,21 @@ export const api = {
 
   updateProduct: async (id: string, productData: any) => {
     try {
-      const response = await fetchWithTimeout(`${API_BASE_URL}/products/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(productData),
-      });
+      let options: RequestInit = { method: 'PUT' };
+      if ((productData as any).imageFile instanceof File) {
+        const fd = new FormData();
+        fd.append('name', productData.name || '');
+        fd.append('description', productData.description || '');
+        fd.append('price', String(productData.price || '0'));
+        fd.append('stock_quantity', String(productData.stock_quantity || '0'));
+        fd.append('category', productData.category || '');
+        fd.append('image', (productData as any).imageFile);
+        options.body = fd as unknown as BodyInit;
+      } else {
+        options.body = JSON.stringify(productData);
+        options.headers = { 'Content-Type': 'application/json' };
+      }
+      const response = await fetchWithTimeout(`${API_BASE_URL}/products/${id}`, options);
       
       if (!response.ok) {
         const error = await response.json();

@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Trash2, Edit, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { formatZAR } from '@/lib/currency';
 
 interface Product {
   id?: string;
@@ -28,13 +29,9 @@ const getProductId = (product: Product): string => {
   return product.id || product._id || '';
 };
 
-// Helper function to safely format price
-const formatPrice = (price: any): string => {
-  const numPrice = Number(price) || 0;
-  return numPrice.toFixed(2);
-};
+// prices are displayed in ZAR using formatZAR
 
-export function AdminProductManager() {
+export function AdminProductManager({ categoryFilter, presetCategory }: { categoryFilter?: string; presetCategory?: string } = {}) {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -48,11 +45,12 @@ export function AdminProductManager() {
     stock_quantity: '',
     category: '',
     image_url: '',
+    imageFile: undefined as File | undefined,
   });
 
   const fetchProducts = async () => {
     try {
-      const data = await api.getProducts();
+      const data = await api.getProducts(categoryFilter);
       // Ensure price and stock_quantity are numbers
       const processedProducts = data.map((product: any) => ({
         ...product,
@@ -73,18 +71,37 @@ export function AdminProductManager() {
 
   useEffect(() => {
     fetchProducts();
-  }, []);
+  }, [categoryFilter]);
+
+  const openAddForm = (preset?: string) => {
+    setFormData({
+      name: '',
+      description: '',
+      price: '',
+      stock_quantity: '',
+      category: preset || (presetCategory || ''),
+      image_url: '',
+      imageFile: undefined,
+    });
+    setEditingProduct(null);
+    setShowAddForm(true);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const productData = {
-        ...formData,
+      const productData: any = {
+        name: formData.name,
+        description: formData.description,
         price: parseFloat(formData.price),
         stock_quantity: parseInt(formData.stock_quantity) || 0,
+        category: formData.category,
       };
+      // Attach the file if provided
+      if (formData.imageFile) productData.imageFile = formData.imageFile;
+      else if (formData.image_url) productData.image_url = formData.image_url;
 
       if (editingProduct) {
         await api.updateProduct(getProductId(editingProduct), productData);
@@ -108,6 +125,7 @@ export function AdminProductManager() {
         stock_quantity: '',
         category: '',
         image_url: '',
+        imageFile: undefined,
       });
       setEditingProduct(null);
       setShowAddForm(false);
@@ -134,6 +152,7 @@ export function AdminProductManager() {
       stock_quantity: product.stock_quantity.toString(),
       category: product.category,
       image_url: product.image_url,
+      imageFile: undefined,
     });
     setShowAddForm(true);
   };
@@ -167,6 +186,7 @@ export function AdminProductManager() {
       stock_quantity: '',
       category: '',
       image_url: '',
+      imageFile: undefined,
     });
   };
 
@@ -178,7 +198,7 @@ export function AdminProductManager() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Product Management</h2>
-        <Button onClick={() => setShowAddForm(true)} className="flex items-center gap-2">
+        <Button onClick={() => openAddForm()} className="flex items-center gap-2">
           <Plus className="w-4 h-4" />
           Add Product
         </Button>
@@ -230,7 +250,12 @@ export function AdminProductManager() {
                     id="category"
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    readOnly={Boolean(presetCategory)}
+                    disabled={Boolean(presetCategory)}
                   />
+                  {presetCategory && (
+                    <div className="text-sm text-gray-500">Category locked to "{presetCategory}"</div>
+                  )}
                 </div>
               </div>
               <div className="space-y-2">
@@ -250,6 +275,16 @@ export function AdminProductManager() {
                   onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
                   placeholder="https://example.com/image.jpg"
                 />
+                <div className="pt-2">
+                  <Label htmlFor="image_file">Or upload image</Label>
+                  <input
+                    id="image_file"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setFormData({ ...formData, imageFile: e.target.files ? e.target.files[0] : undefined })}
+                    className="mt-2"
+                  />
+                </div>
               </div>
               <div className="flex gap-2">
                 <Button type="submit" disabled={loading}>
@@ -272,7 +307,7 @@ export function AdminProductManager() {
                 <div>
                   <CardTitle className="text-lg">{product.name}</CardTitle>
                   <CardDescription className="text-2xl font-bold text-green-600">
-                    ${formatPrice(product.price)}
+                    {formatZAR(product.price)}
                   </CardDescription>
                 </div>
                 <div className="flex gap-2">

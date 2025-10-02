@@ -4,6 +4,7 @@
     "allowJs": true,
     "target": "ES6",
     "skipLibCheck": true,
+    "types": ["node", "react", "react-dom"],
     "strict": true,
     "noEmit": true,
     "esModuleInterop": true,

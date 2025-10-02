@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast"
 import { Eye, Download, Users, FileText, ShoppingCart, TrendingUp } from "lucide-react"
 import { AdminProductManager } from "@/components/admin-product-manager"
+import AdminCMSManager from '@/components/admin-cms-manager'
 
 interface Invoice {
   id?: number | string
@@ -372,6 +373,10 @@ export default function AdminDashboard() {
           <TabsList>
             <TabsTrigger value="invoices">Invoices & Orders</TabsTrigger>
             <TabsTrigger value="products">Product Management</TabsTrigger>
+            <TabsTrigger value="jewellery">Jewellery Management</TabsTrigger>
+            <TabsTrigger value="blog">Blog CMS</TabsTrigger>
+            <TabsTrigger value="advice">Advice CMS</TabsTrigger>
+            <TabsTrigger value="videos">Videos CMS</TabsTrigger>
           </TabsList>
 
           <TabsContent value="invoices">
@@ -545,6 +550,18 @@ export default function AdminDashboard() {
 
           <TabsContent value="products">
             <AdminProductManager />
+          </TabsContent>
+          <TabsContent value="jewellery">
+            <AdminProductManager categoryFilter={'Jewellery'} presetCategory={'Jewellery'} />
+          </TabsContent>
+          <TabsContent value="blog">
+            <AdminCMSManager resource={'blog'} />
+          </TabsContent>
+          <TabsContent value="advice">
+            <AdminCMSManager resource={'advice'} />
+          </TabsContent>
+          <TabsContent value="videos">
+            <AdminCMSManager resource={'videos'} />
           </TabsContent>
         </Tabs>
       </div>
