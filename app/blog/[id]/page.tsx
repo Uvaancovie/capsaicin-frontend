@@ -11,7 +11,9 @@ async function fetchPost(id: string) {
 }
 
 export default async function BlogPostPage({ params }: { params: { id: string } }) {
-  const post = await fetchPost(params.id)
+  // `params` should be awaited in Next.js dynamic route handlers
+  const { id } = await params as unknown as { id: string }
+  const post = await fetchPost(String(id))
   if (!post) return notFound()
 
   return (

@@ -41,7 +41,7 @@ export default function CMSLive({ resource, initial }: { resource: 'blog' | 'adv
     <div className="space-y-4">
       {items.map(it => (
         <div key={it.id} className="border rounded p-4">
-          <h3 className="font-semibold text-lg"><Link href={`/${it.slug || it.id}`}>{it.title}</Link></h3>
+          <h3 className="font-semibold text-lg"><Link href={`/blog/${it.slug || it.id}`}>{it.title}</Link></h3>
           <p className="text-sm text-gray-600">{it.excerpt}</p>
         </div>
       ))}
