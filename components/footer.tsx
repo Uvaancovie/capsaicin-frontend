@@ -59,18 +59,18 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="#" className="text-gray-400 hover:text-white">
-                  Shipping Info
+                <Link href="/shipping" className="text-gray-400 hover:text-white">
+                  Shipping Policy
                 </Link>
               </li>
               <li>
-                <Link href="#" className="text-gray-400 hover:text-white">
-                  Returns
+                <Link href="/returns" className="text-gray-400 hover:text-white">
+                  Returns Policy
                 </Link>
               </li>
               <li>
-                <Link href="#" className="text-gray-400 hover:text-white">
-                  FAQ
+                <Link href="/privacy" className="text-gray-400 hover:text-white">
+                  Privacy Policy
                 </Link>
               </li>
             </ul>
@@ -95,8 +95,24 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-          <p>&copy; {new Date().getFullYear()} Cape Pharm. All rights reserved.</p>
+        <div className="border-t border-gray-800 mt-8 pt-8">
+          <div className="flex flex-col md:flex-row justify-between items-center text-gray-400 text-sm space-y-4 md:space-y-0">
+            <p>&copy; {new Date().getFullYear()} Cape Pharm (PTY) LTD. All rights reserved.</p>
+            <div className="flex space-x-4">
+              <Link href="/terms" className="hover:text-white">
+                Terms & Conditions
+              </Link>
+              <Link href="/privacy" className="hover:text-white">
+                Privacy Policy
+              </Link>
+              <Link href="/returns" className="hover:text-white">
+                Returns
+              </Link>
+              <Link href="/shipping" className="hover:text-white">
+                Shipping
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     </footer>
