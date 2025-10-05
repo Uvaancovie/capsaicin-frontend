@@ -6,6 +6,7 @@ import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { CartProvider } from "@/components/cart-provider"
 import { AuthProvider } from "@/components/auth-provider"
+import { LoadingProvider } from "@/components/loading-provider"
 import { Toaster } from "@/components/ui/toaster"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
@@ -28,10 +29,12 @@ export default function RootLayout({
       <body className={`${inter.variable} ${montserrat.variable} font-sans`}>
         <AuthProvider>
           <CartProvider>
-            <Header />
-            <main>{children}</main>
-            <Footer />
-            <Toaster />
+            <LoadingProvider>
+              <Header />
+              <main>{children}</main>
+              <Footer />
+              <Toaster />
+            </LoadingProvider>
           </CartProvider>
         </AuthProvider>
       </body>

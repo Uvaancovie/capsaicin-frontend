@@ -1,22 +1,44 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Shield, Truck, Heart, Plus, Minus } from "lucide-react"
+import { SearchIcon, FilterIcon } from "lucide-react"
 import Image from "next/image"
 import Link from 'next/link'
 import { formatZAR } from '@/lib/currency'
-import { useCart } from "@/components/cart-provider"
-import { useToast } from "@/hooks/use-toast"
+import { Suspense } from 'react'
+import { ShopFilters } from './shop-filters'
 
 // Server component to fetch products with ISR (revalidate)
 const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
 function formatPrice(price: any): string { return formatZAR(Number(price) || 0); }
 
-export default async function ShopPage({ searchParams }: { searchParams?: { page?: string } }) {
+const categories = ['Vitamins', 'Pain Relief', 'Weight Loss', 'Jewellery'];
+
+export default async function ShopPage({ searchParams }: { 
+  searchParams?: { 
+    page?: string;
+    category?: string;
+    search?: string;
+  } 
+}) {
   const page = Math.max(1, Number(searchParams?.page || 1));
+  const category = searchParams?.category || '';
+  const search = searchParams?.search || '';
   const limit = 24;
-  const res = await fetch(`${apiBase}/products?page=${page}&limit=${limit}`, { next: { revalidate: 60 } });
+  
+  // Build query string
+  const queryParams = new URLSearchParams({
+    page: page.toString(),
+    limit: limit.toString(),
+  });
+  
+  if (category) queryParams.append('category', category);
+  if (search) queryParams.append('search', search);
+  
+  const res = await fetch(`${apiBase}/products?${queryParams.toString()}`, { 
+    next: { revalidate: 60 } 
+  });
   const json = await res.json();
   const products = Array.isArray(json.items) ? json.items : (json || []);
 
@@ -24,8 +46,19 @@ export default async function ShopPage({ searchParams }: { searchParams?: { page
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Our Products</h1>
-          <p className="text-xl text-gray-600">Quality healthcare products from Cape Pharm</p>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            {category ? `${category} Products` : 'Our Products'}
+          </h1>
+          <p className="text-xl text-gray-600">
+            {search ? `Search results for "${search}"` : 'Quality healthcare products from Cape Pharm'}
+          </p>
+        </div>
+
+        {/* Search and Filter Section */}
+        <div className="mb-8">
+          <Suspense fallback={<div>Loading filters...</div>}>
+            <ShopFilters currentCategory={category} currentSearch={search} />
+          </Suspense>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

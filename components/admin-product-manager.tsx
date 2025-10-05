@@ -6,11 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Trash2, Edit, Plus } from 'lucide-react';
+import { Trash2, Edit, Plus, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { formatZAR } from '@/lib/currency';
+import { useLoading } from '@/components/loading-provider';
 
 interface Product {
   id?: string;
@@ -29,6 +31,8 @@ const getProductId = (product: Product): string => {
   return product.id || product._id || '';
 };
 
+const categories = ['Vitamins', 'Pain Relief', 'Weight Loss', 'Jewellery'];
+
 // prices are displayed in ZAR using formatZAR
 
 export function AdminProductManager({ categoryFilter, presetCategory }: { categoryFilter?: string; presetCategory?: string } = {}) {
@@ -36,7 +40,9 @@ export function AdminProductManager({ categoryFilter, presetCategory }: { catego
   const [loading, setLoading] = useState(true);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
   const { toast } = useToast();
+  const { setLoading: setGlobalLoading, setLoadingMessage } = useLoading();
 
   const [formData, setFormData] = useState({
     name: '',
@@ -90,6 +96,8 @@ export function AdminProductManager({ categoryFilter, presetCategory }: { catego
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setGlobalLoading(true);
+    setLoadingMessage(editingProduct ? 'Updating product...' : 'Adding new product...');
 
     try {
       const productData: any = {
@@ -140,6 +148,8 @@ export function AdminProductManager({ categoryFilter, presetCategory }: { catego
       });
     } finally {
       setLoading(false);
+      setGlobalLoading(false);
+      setLoadingMessage('');
     }
   };
 
@@ -160,19 +170,43 @@ export function AdminProductManager({ categoryFilter, presetCategory }: { catego
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this product?')) return;
     
+    // Add to deleting set for loading state
+    setDeletingIds(prev => new Set([...prev, id]));
+    setGlobalLoading(true);
+    setLoadingMessage('Deleting product...');
+    
+    // Optimistic update - remove from UI immediately
+    const productToDelete = products.find(p => getProductId(p) === id);
+    setProducts(prev => prev.filter(p => getProductId(p) !== id));
+    
     try {
       await api.deleteProduct(id);
       toast({
         title: "Success",
         description: "Product deleted successfully",
       });
-      await fetchProducts();
+      // Product already removed from UI, no need to refetch
     } catch (error) {
+      // Revert optimistic update on error
+      if (productToDelete) {
+        setProducts(prev => [...prev, productToDelete].sort((a, b) => 
+          new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime()
+        ));
+      }
       toast({
         title: "Error",
         description: "Failed to delete product",
         variant: "destructive"
       });
+    } finally {
+      // Remove from deleting set and clear loading
+      setDeletingIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(id);
+        return newSet;
+      });
+      setGlobalLoading(false);
+      setLoadingMessage('');
     }
   };
 
@@ -246,15 +280,32 @@ export function AdminProductManager({ categoryFilter, presetCategory }: { catego
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="category">Category</Label>
-                  <Input
-                    id="category"
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    readOnly={Boolean(presetCategory)}
-                    disabled={Boolean(presetCategory)}
-                  />
-                  {presetCategory && (
-                    <div className="text-sm text-gray-500">Category locked to "{presetCategory}"</div>
+                  {presetCategory ? (
+                    <>
+                      <Input
+                        id="category"
+                        value={formData.category}
+                        readOnly
+                        disabled
+                      />
+                      <div className="text-sm text-gray-500">Category locked to "{presetCategory}"</div>
+                    </>
+                  ) : (
+                    <Select
+                      value={formData.category}
+                      onValueChange={(value) => setFormData({ ...formData, category: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map((category) => (
+                          <SelectItem key={category} value={category}>
+                            {category}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   )}
                 </div>
               </div>
@@ -311,11 +362,26 @@ export function AdminProductManager({ categoryFilter, presetCategory }: { catego
                   </CardDescription>
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={() => handleEdit(product)}>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => handleEdit(product)}
+                    disabled={deletingIds.has(getProductId(product))}
+                  >
                     <Edit className="w-4 h-4" />
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => handleDelete(getProductId(product))}>
-                    <Trash2 className="w-4 h-4" />
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => handleDelete(getProductId(product))}
+                    disabled={deletingIds.has(getProductId(product))}
+                    className={deletingIds.has(getProductId(product)) ? 'opacity-50' : ''}
+                  >
+                    {deletingIds.has(getProductId(product)) ? (
+                      <div className="w-4 h-4 animate-spin rounded-full border-2 border-gray-300 border-t-gray-900"></div>
+                    ) : (
+                      <Trash2 className="w-4 h-4" />
+                    )}
                   </Button>
                 </div>
               </div>
