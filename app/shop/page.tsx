@@ -13,19 +13,36 @@ const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
 function formatPrice(price: any): string { return formatZAR(Number(price) || 0); }
 
-const categories = ['Vitamins', 'Pain Relief', 'Weight Loss', 'Jewellery'];
+async function getCategories(): Promise<string[]> {
+  try {
+    const res = await fetch(`${apiBase}/products/categories`, {
+      next: { revalidate: 300 },
+      cache: 'force-cache'
+    });
+    if (!res.ok) return [];
+    const categories = await res.json();
+    return Array.isArray(categories) ? categories : [];
+  } catch (error) {
+    console.error('Failed to fetch categories:', error);
+    return [];
+  }
+}
 
 export default async function ShopPage({ searchParams }: { 
-  searchParams?: { 
+  searchParams?: Promise<{ 
     page?: string;
     category?: string;
     search?: string;
-  } 
+  }>
 }) {
-  const page = Math.max(1, Number(searchParams?.page || 1));
-  const category = searchParams?.category || '';
-  const search = searchParams?.search || '';
+  const params = await searchParams;
+  const page = Math.max(1, Number(params?.page || 1));
+  const category = params?.category || '';
+  const search = params?.search || '';
   const limit = 24;
+  
+  // Fetch available categories
+  const categories = await getCategories();
   
   // Build query string
   const queryParams = new URLSearchParams({
@@ -37,7 +54,8 @@ export default async function ShopPage({ searchParams }: {
   if (search) queryParams.append('search', search);
   
   const res = await fetch(`${apiBase}/products?${queryParams.toString()}`, { 
-    next: { revalidate: 60 } 
+    next: { revalidate: 300 }, // 5 minutes cache
+    cache: 'force-cache'
   });
   const json = await res.json();
   const products = Array.isArray(json.items) ? json.items : (json || []);
@@ -57,7 +75,7 @@ export default async function ShopPage({ searchParams }: {
         {/* Search and Filter Section */}
         <div className="mb-8">
           <Suspense fallback={<div>Loading filters...</div>}>
-            <ShopFilters currentCategory={category} currentSearch={search} />
+            <ShopFilters currentCategory={category} currentSearch={search} categories={categories} />
           </Suspense>
         </div>
 

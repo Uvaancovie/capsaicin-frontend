@@ -9,10 +9,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Trash2, Edit, Plus, Loader2 } from 'lucide-react';
+import { Trash2, Edit, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { formatZAR } from '@/lib/currency';
-import { useLoading } from '@/components/loading-provider';
 
 interface Product {
   id?: string;
@@ -31,18 +30,16 @@ const getProductId = (product: Product): string => {
   return product.id || product._id || '';
 };
 
-const categories = ['Vitamins', 'Pain Relief', 'Weight Loss', 'Jewellery'];
-
 // prices are displayed in ZAR using formatZAR
 
 export function AdminProductManager({ categoryFilter, presetCategory }: { categoryFilter?: string; presetCategory?: string } = {}) {
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
   const { toast } = useToast();
-  const { setLoading: setGlobalLoading, setLoadingMessage } = useLoading();
 
   const [formData, setFormData] = useState({
     name: '',
@@ -75,8 +72,24 @@ export function AdminProductManager({ categoryFilter, presetCategory }: { catego
     }
   };
 
+  const fetchCategories = async () => {
+    try {
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+      const res = await fetch(`${apiBase}/products/categories`);
+      if (res.ok) {
+        const cats = await res.json();
+        setCategories(Array.isArray(cats) ? cats : []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch categories:', error);
+      // Fallback to default categories
+      setCategories(['Vitamins', 'Pain Relief', 'Weight Loss', 'Jewellery']);
+    }
+  };
+
   useEffect(() => {
     fetchProducts();
+    fetchCategories();
   }, [categoryFilter]);
 
   const openAddForm = (preset?: string) => {
@@ -96,8 +109,6 @@ export function AdminProductManager({ categoryFilter, presetCategory }: { catego
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setGlobalLoading(true);
-    setLoadingMessage(editingProduct ? 'Updating product...' : 'Adding new product...');
 
     try {
       const productData: any = {
@@ -148,8 +159,6 @@ export function AdminProductManager({ categoryFilter, presetCategory }: { catego
       });
     } finally {
       setLoading(false);
-      setGlobalLoading(false);
-      setLoadingMessage('');
     }
   };
 
@@ -172,8 +181,6 @@ export function AdminProductManager({ categoryFilter, presetCategory }: { catego
     
     // Add to deleting set for loading state
     setDeletingIds(prev => new Set([...prev, id]));
-    setGlobalLoading(true);
-    setLoadingMessage('Deleting product...');
     
     // Optimistic update - remove from UI immediately
     const productToDelete = products.find(p => getProductId(p) === id);
@@ -199,14 +206,12 @@ export function AdminProductManager({ categoryFilter, presetCategory }: { catego
         variant: "destructive"
       });
     } finally {
-      // Remove from deleting set and clear loading
+      // Remove from deleting set
       setDeletingIds(prev => {
         const newSet = new Set(prev);
         newSet.delete(id);
         return newSet;
       });
-      setGlobalLoading(false);
-      setLoadingMessage('');
     }
   };
 

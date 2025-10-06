@@ -14,7 +14,10 @@ async function fetchJewellery(search?: string) {
       queryParams.append('search', search);
     }
     
-    const res = await fetch(`${API}/products?${queryParams.toString()}`, { next: { revalidate: 60 } })
+    const res = await fetch(`${API}/products?${queryParams.toString()}`, { 
+      next: { revalidate: 300 }, // 5 minutes cache
+      cache: 'force-cache'
+    })
     if (!res.ok) return []
     const data = await res.json()
     return Array.isArray(data) ? data : (data.items || [])
@@ -26,9 +29,10 @@ async function fetchJewellery(search?: string) {
 export default async function JewelleryPage({ 
   searchParams 
 }: { 
-  searchParams?: { search?: string } 
+  searchParams?: Promise<{ search?: string }>
 }) {
-  const search = searchParams?.search || '';
+  const params = await searchParams;
+  const search = params?.search || '';
   const products = await fetchJewellery(search)
 
   return (
