@@ -10,10 +10,16 @@ const fetchWithTimeout = async (url: string, options: RequestInit = {}, timeout 
     const response = await fetch(url, {
       ...options,
       signal: controller.signal,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
+      // Avoid forcing Content-Type globally. If the caller provided headers, use them.
+      // If the body is FormData, let the browser set the multipart Content-Type (with boundary).
+      headers: (() => {
+        const provided = options.headers ? { ...options.headers } : {} as Record<string,string>;
+        const hasContentType = Object.keys(provided).some(k => k.toLowerCase() === 'content-type');
+        // If body is FormData, do not set Content-Type so the browser can add the boundary
+        if (options.body instanceof FormData) return provided;
+        if (!hasContentType) (provided as Record<string,string>)['Content-Type'] = 'application/json';
+        return provided;
+      })(),
     });
     clearTimeout(id);
     return response;

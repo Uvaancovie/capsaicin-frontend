@@ -49,6 +49,7 @@ export function AdminProductManager({ categoryFilter, presetCategory }: { catego
     category: '',
     image_url: '',
     imageFile: undefined as File | undefined,
+    _newCategory: '' as string,
   });
 
   const fetchProducts = async () => {
@@ -87,6 +88,33 @@ export function AdminProductManager({ categoryFilter, presetCategory }: { catego
     }
   };
 
+  // Create a new category (admin)
+  const createCategory = async (name: string) => {
+    if (!name || !name.trim()) return;
+    try {
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+      const res = await fetch(`${apiBase}/products/categories`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name.trim() })
+      });
+      if (res.ok) {
+        const body = await res.json();
+        const merged = Array.isArray(body.categories) ? body.categories : (Array.isArray(body) ? body : []);
+        setCategories(merged);
+        // Auto-select the newly created category and clear the input
+        setFormData({ ...formData, category: name.trim(), _newCategory: '' });
+        toast({ title: 'Success', description: `Category "${name.trim()}" created` });
+      } else {
+        const err = await res.json().catch(() => null);
+        toast({ title: 'Error', description: err && err.message ? err.message : 'Failed to create category', variant: 'destructive' });
+      }
+    } catch (error) {
+      console.error('Failed to create category:', error);
+      toast({ title: 'Error', description: 'Failed to create category', variant: 'destructive' });
+    }
+  };
+
   useEffect(() => {
     fetchProducts();
     fetchCategories();
@@ -101,6 +129,7 @@ export function AdminProductManager({ categoryFilter, presetCategory }: { catego
       category: preset || (presetCategory || ''),
       image_url: '',
       imageFile: undefined,
+      _newCategory: '',
     });
     setEditingProduct(null);
     setShowAddForm(true);
@@ -108,6 +137,24 @@ export function AdminProductManager({ categoryFilter, presetCategory }: { catego
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Client-side validation to avoid sending incomplete multipart requests
+    if (!formData.name || !formData.name.trim()) {
+      toast({ title: 'Validation', description: 'Product name is required', variant: 'destructive' });
+      return;
+    }
+    if (!formData.description || !formData.description.trim()) {
+      toast({ title: 'Validation', description: 'Product description is required', variant: 'destructive' });
+      return;
+    }
+    if (!formData.price || Number.isNaN(Number(formData.price))) {
+      toast({ title: 'Validation', description: 'Valid product price is required', variant: 'destructive' });
+      return;
+    }
+    if (!formData.category || !formData.category.trim()) {
+      toast({ title: 'Validation', description: 'Product category is required', variant: 'destructive' });
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -145,6 +192,7 @@ export function AdminProductManager({ categoryFilter, presetCategory }: { catego
         category: '',
         image_url: '',
         imageFile: undefined,
+        _newCategory: '',
       });
       setEditingProduct(null);
       setShowAddForm(false);
@@ -172,6 +220,7 @@ export function AdminProductManager({ categoryFilter, presetCategory }: { catego
       category: product.category,
       image_url: product.image_url,
       imageFile: undefined,
+      _newCategory: '',
     });
     setShowAddForm(true);
   };
@@ -226,6 +275,7 @@ export function AdminProductManager({ categoryFilter, presetCategory }: { catego
       category: '',
       image_url: '',
       imageFile: undefined,
+      _newCategory: '',
     });
   };
 
@@ -279,6 +329,7 @@ export function AdminProductManager({ categoryFilter, presetCategory }: { catego
                   <Input
                     id="stock"
                     type="number"
+                    min={0}
                     value={formData.stock_quantity}
                     onChange={(e) => setFormData({ ...formData, stock_quantity: e.target.value })}
                   />
@@ -312,6 +363,16 @@ export function AdminProductManager({ categoryFilter, presetCategory }: { catego
                       </SelectContent>
                     </Select>
                   )}
+                  <div className="mt-2 flex gap-2">
+                    <Input
+                      placeholder="Add new category"
+                      value={(formData as any)._newCategory || ''}
+                      onChange={(e) => setFormData({ ...formData, ...( { _newCategory: e.target.value } as any ) })}
+                    />
+                    <Button type="button" onClick={() => { const n = (formData as any)._newCategory; if (n) { createCategory(n); setFormData({ ...formData, ...( { _newCategory: '' } as any ) }); } }}>
+                      Add
+                    </Button>
+                  </div>
                 </div>
               </div>
               <div className="space-y-2">
